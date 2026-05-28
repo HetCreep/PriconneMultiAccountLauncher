@@ -1,0 +1,52 @@
+name: Regenerate Lockfile
+
+# Regenerate requirements.lock.txt from requirements.txt in a clean Windows env,
+# so the lock reflects exactly the declared deps + their transitive closure —
+# no .venv pollution (pypresence/youtube-transcript-api/etc.), UTF-8 encoded.
+#
+# Run via the Actions tab -> "Regenerate Lockfile" -> "Run workflow",
+# or: gh workflow run lock.yml
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lock:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Regenerate lock from requirements.txt
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # Freeze the resolved runtime + transitive set. Drop the bootstrap trio
+          # (pip / setuptools / wheel) which are not project dependencies.
+          $frozen = pip freeze | Where-Object { $_ -and ($_ -notmatch '^(pip|setuptools|wheel)==') } | Sort-Object
+          $frozen | Set-Content -Path requirements.lock.txt -Encoding utf8
+          Write-Host "=== regenerated requirements.lock.txt ($($frozen.Count) packages) ==="
+          Get-Content requirements.lock.txt
+
+      - name: Commit if changed
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add requirements.lock.txt
+          if (git status --porcelain requirements.lock.txt) {
+            git commit -m "chore(deps): regenerate requirements.lock.txt from requirements.txt (clean, UTF-8)"
+            git push
+            Write-Host "Lockfile updated and pushed."
+          } else {
+            Write-Host "Lockfile already up to date."
+          }
