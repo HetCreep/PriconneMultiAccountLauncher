@@ -1,0 +1,241 @@
+# Bootstrap translation. Maintainer review + community PRs welcome.
+th_TH:
+  title: Priconne Multi Account Launcher
+  language: ไทย
+
+  font:
+    main: "Leelawadee UI"
+
+  tab:
+    home: หน้าหลัก
+    shortcut: ทางลัด
+    account: บัญชี
+    setting: ตั้งค่า
+    other: อื่นๆ
+    help: ช่วยเหลือ
+    create: สร้างทางลัด
+    edit: แก้ไขทางลัด
+    general: "ทั่วไป"
+    appearance: "หน้าตา"
+    advanced: "ขั้นสูง"
+    launch_create: เปิด GamePlayer ด่วน
+    launch_edit: แก้ไขเปิด GamePlayer ด่วน
+    account_import: นำเข้าจาก DMM
+    account_edit: แก้ไขบัญชี
+    import_browser: นำเข้าจากเบราว์เซอร์
+    device: ลงทะเบียนอุปกรณ์
+    backup: "สำรองข้อมูล"
+    device_list: รายการอุปกรณ์
+
+  home:
+    new_version: มี Priconne Multi Account Launcher เวอร์ชันใหม่
+
+  shortcut:
+    filename: ชื่อไฟล์
+    filename_tooltip: |
+      ตั้งชื่อทางลัดได้ตามต้องการ
+      ใช้ตัวอักษรนอกเหนือ a-z A-Z 0-9 อาจมีปัญหา
+
+    product_id: เลือก product_id
+    product_id_tooltip: |
+      product_id คือ ID ที่ DMM ใช้แยกแยะเกม
+
+    account_create_detail: |-
+      สร้างทางลัดเปิด DMMGamePlayer ด่วน
+      เลือกบัญชีที่สร้างใน tab "บัญชี"
+
+    account_path: เลือกบัญชี
+    account_path_tooltip: |-
+      เลือกบัญชีที่สร้างใน tab "บัญชี"
+    always_extract_from_dmm: ดึงจาก DMM ทุกครั้ง
+    game_args: Argument ของเกม
+    game_args_tooltip: |-
+      ระบุ argument ที่ส่งให้เกม
+      เกม Unity เช่น '-screen-fullscreen 0 -screen-width 1280 -screen-height 720' = หน้าต่าง 1280x720
+    external_tool_path: Path ของ external tool
+    external_tool_path_tooltip: ระบุ path ถ้าต้องการใช้ external tool ตอนเปิดเกม
+    registry_path: Registry Path
+    registry_path_tooltip: Windows registry path ของข้อมูลเกม (ล็อก ใช้ backup/restore ต่อบัญชี)
+    auto_update: อัปเดตเกมอัตโนมัติตอนเปิด
+
+    create_shortcut_and_save: สร้างทางลัด + บันทึก
+    create_shortcut_and_save_tooltip: |
+      สร้าง shortcut บน desktop และบันทึก settings.
+      สิทธิ์ admin (ถ้าเกมต้องการ) จะถูกขออัตโนมัติตอน launch.
+
+    save_only: บันทึกอย่างเดียว
+    save_only_tooltip: |
+      บันทึกโดยไม่สร้างทางลัด
+      เปิดผ่าน command line:
+      `PriconneMultiAccountLauncher.exe [ชื่อไฟล์] --type game`
+
+    add_detail: สร้างทางลัดและตั้งค่าสำหรับเปิดด่วน
+    edit_detail: แก้ไขตั้งค่าทางลัดเปิดด่วน
+
+    file_select: เลือกไฟล์
+
+    product_id_not_entered: ยังไม่ได้กรอก product_id
+    filename_not_entered: ยังไม่ได้กรอกชื่อไฟล์
+    account_path_not_entered: ยังไม่ได้เลือกบัญชี
+    game_info_error: ดึงข้อมูลเกมล้มเหลว
+    file_not_selected: ยังไม่ได้เลือกไฟล์
+    save_success: บันทึกสำเร็จ
+    delete: ลบ
+
+    account_edit_detail: แก้ไขตั้งค่าเปิด DMMGamePlayer ด่วน
+    dgp_args: Argument ของ DMMGamePlayer
+    dgp_args_tooltip: |-
+      ระบุ argument ที่ส่งให้ DMMGamePlayer
+      เช่น 'dmmgameplayer://play/GCL/priconner/cl/win' จะเปิด Princess Connect! Re:Dive ใน DMMGamePlayer
+      เว้นว่าง = เปิดแค่ DMMGamePlayer
+    unity_command_line_args: อ่านเพิ่มเรื่อง Unity command line arguments
+    unity_command_line_args_tooltip: |-
+      เปิดเว็บเกี่ยวกับ Unity command-line arguments
+      ใช้ประโยชน์ได้ถ้าเกมเขียนด้วย Unity
+    unity_command_line_args_link: https://docs.unity3d.com/Manual/PlayerCommandLineArguments.html
+
+  account:
+    import_detail: |-
+      นำเข้าข้อมูลบัญชี DMMGamePlayer เข้า PriconneMultiAccountLauncher
+      วิธีนี้เลิกใช้แล้ว แนะนำนำเข้าจากเบราว์เซอร์
+
+    filename_tooltip: |-
+      ตั้งชื่อบัญชีได้ตามต้องการ
+      ใช้ตัวอักษรไม่ใช่ a-z A-Z 0-9 อาจมีปัญหา
+    import: นำเข้า
+    filename: ชื่อไฟล์
+    filename_not_entered: ยังไม่ได้กรอกชื่อไฟล์
+    filename_already_exists: ชื่อไฟล์นี้มีอยู่แล้ว
+    filename_reserved: ชื่อไฟล์นี้ถูกสงวนไว้
+    import_error: นำเข้าล้มเหลว
+    import_success: นำเข้าสำเร็จ
+
+    file_select: เลือกไฟล์
+
+    import_browser_detail: เปิดเบราว์เซอร์เพื่อนำเข้าข้อมูลบัญชีจาก DMMGamePlayer
+    browser_select: เลือกเบราว์เซอร์
+    auto_refresh: รีเฟรช session login อัตโนมัติ
+    browser_select_tooltip: |-
+      เลือกเบราว์เซอร์ที่ต้องการ
+      เบราว์เซอร์ที่เลือกจะเปิดและแสดงหน้า login
+    browser_not_selected: ยังไม่ได้เลือกเบราว์เซอร์
+    import_browser: นำเข้า
+    import_browser_success: นำเข้าสำเร็จ
+
+    edit_detail: |-
+      แก้ไขข้อมูลบัญชี
+      เป็น operation ขั้นสูง
+
+    save: บันทึก
+    delete: ลบ
+    save_success: บันทึกสำเร็จ
+
+    device_detail: |-
+      กรอก "Device Authentication Code" ที่ส่งไปยังอีเมล
+
+    send_auth_code: ส่งโค้ดยืนยัน
+    auth: ยืนยัน
+
+    hardware_name: ชื่ออุปกรณ์
+    auth_code: Device Authentication Code
+    auth_code_tooltip: |-
+      กรอกโค้ด a-z A-Z 0-9 ที่ได้รับทางอีเมล
+    send_auth_code_success: ส่งโค้ดยืนยันสำเร็จ
+    auth_success: ยืนยันสำเร็จ
+    device_list_success: ดึงรายการอุปกรณ์สำเร็จ
+    delete_success: ลบสำเร็จ
+
+    device_registrations: "อุปกรณ์ที่ลงทะเบียน: %{count} / %{limit}"
+
+  setting:
+    save: บันทึก
+    reset_all_settings: รีเซ็ตการตั้งค่าทั้งหมด
+    confirm_reset: ยืนยันรีเซ็ตการตั้งค่าทั้งหมด?
+    save_success: บันทึกการตั้งค่าสำเร็จ
+    dmm_game_player_program_folder: โฟลเดอร์โปรแกรม DMMGamePlayer
+    dmm_game_player_data_folder: โฟลเดอร์ข้อมูล DMMGamePlayer
+    lang: ภาษา
+    theme: ธีม
+    appearance: หน้าตา
+
+    font_preset: Preset font
+    font_preset_tooltip: |-
+      เลือก preset font.
+      auto:   Font ที่เหมาะกับภาษาปัจจุบัน (แนะนำ).
+      system: Font default ของ Windows.
+
+    proxy_all: Proxy
+    proxy_all_tooltip: |-
+      ตั้งค่า proxy ของเกม
+      ตัวอย่าง: http://127.0.0.1:80
+               https://127.0.0.1:443
+               socks5://127.0.0.1:1080
+               socks5://user:pass@127.0.0.1:1080
+
+    dmm_proxy_all: DMM Proxy
+    dmm_proxy_all_tooltip: |-
+      ตั้งค่า proxy ของ DMM
+      ตัวอย่าง: http://127.0.0.1:80
+               https://127.0.0.1:443
+               socks5://127.0.0.1:1080
+               socks5://user:pass@127.0.0.1:1080
+
+    window_scaling: ขนาดหน้าต่าง
+    reset_to_auto: "รีเซ็ตเป็นอัตโนมัติ"
+    debug_window: แสดง Debug Window
+    output_logfile: บันทึก log ลงไฟล์
+    mask_token: ซ่อน token ใน log
+    disable_update_check: ปิดการตรวจอัปเดต (ไม่เชื่อม GitHub)
+
+    device_detail: |-
+      ตั้งค่าข้อมูลอุปกรณ์สำหรับ device authentication
+      ค่าไม่จำเป็นต้องตรง
+
+    mac_address: MAC Address
+    hdd_serial: HDD Serial
+    motherboard: Motherboard ID
+    user_os: OS
+
+    other_detail: แก้ไขการตั้งค่า tool ใน text editor
+    backup_detail: "สำรองข้อมูลข้ามเครื่อง เข้ารหัสด้วย passphrase ของคุณ ใช้ passphrase เดิมเพื่อกู้คืนบนเครื่องอื่น"
+    backup_section: "สำรองข้อมูล"
+    export_backup: "Export backup..."
+    import_backup: "Import backup..."
+    passphrase_prompt: "กรอก passphrase (อย่างน้อย 8 ตัวอักษร):"
+    passphrase_too_short: "Passphrase ต้องยาวอย่างน้อย 8 ตัวอักษร"
+    export_success: "Export สำเร็จ (%{count} บัญชี)"
+    import_success: "Import สำเร็จ %{count} บัญชี"
+
+    open_save_folder: เปิดโฟลเดอร์การตั้งค่า
+
+  help:
+    coop_in_develop: ร่วมพัฒนา
+    donations_to_developer: บริจาคให้ผู้พัฒนา
+    bug_report: รายงาน Bug
+
+  launch:
+    export_error: Export ล้มเหลว
+    import_error: Import ล้มเหลว
+
+    admin_error: ต้องใช้สิทธิ์ admin
+
+  component:
+    required: ช่องนี้จำเป็น
+    required_symbol: "*"
+    reference: เลือก
+
+    "yes": "ใช่"
+    "no": "ไม่"
+
+    download: กำลังดาวน์โหลด...
+
+  toast:
+    report: รายงาน
+    copy_to_clipboard: "คัดลอกไป Clipboard"
+    details: รายละเอียด
+
+  lib:
+    dmm_already_running: DMMGamePlayer กำลังทำงานอยู่ เปิดไม่ได้
+
+  utils:
+    file_exists: ไฟล์นี้มีอยู่แล้ว

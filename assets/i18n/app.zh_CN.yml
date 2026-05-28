@@ -1,0 +1,241 @@
+# Bootstrap translation. Maintainer review + community PRs welcome.
+zh_CN:
+  title: Priconne 多账号启动器
+  language: 简体中文
+
+  font:
+    main: "Microsoft YaHei UI"
+
+  tab:
+    home: 主页
+    shortcut: 快捷方式
+    account: 账号
+    setting: 设置
+    other: 其他
+    help: 帮助
+    create: 创建快捷方式
+    edit: 编辑快捷方式
+    general: "常规"
+    appearance: "外观"
+    advanced: "高级"
+    launch_create: 快速启动 GamePlayer
+    launch_edit: 编辑快速启动 GamePlayer
+    account_import: 从 DMM 导入
+    account_edit: 编辑账号
+    import_browser: 从浏览器导入
+    device: 注册设备
+    backup: "备份"
+    device_list: 设备列表
+
+  home:
+    new_version: Priconne 多账号启动器有可用的新版本。
+
+  shortcut:
+    filename: 文件名
+    filename_tooltip: |
+      请为此快捷方式命名。
+      使用半角英数字以外的字符可能会引起问题。
+
+    product_id: 选择 product_id
+    product_id_tooltip: |
+      product_id 是 DMM 用于识别游戏的 ID。
+
+    account_create_detail: |-
+      创建快速启动 DMMGamePlayer 的快捷方式。
+      请选择在「账号」标签中创建的账号。
+
+    account_path: 选择账号
+    account_path_tooltip: |-
+      请选择在「账号」标签中创建的账号。
+    always_extract_from_dmm: 始终从 DMM 提取
+    game_args: 游戏参数
+    game_args_tooltip: |-
+      指定传递给游戏的参数。
+      对于基于 Unity 的游戏,例如 '-screen-fullscreen 0 -screen-width 1280 -screen-height 720' 可以以 1280x720 窗口模式启动。
+    external_tool_path: 外部工具路径
+    external_tool_path_tooltip: 启动游戏时要使用的外部工具的路径。
+    registry_path: 注册表路径
+    registry_path_tooltip: 游戏数据的 Windows 注册表路径(已锁定,用于每账号自动备份/恢复)。
+    auto_update: 启动时自动更新游戏
+
+    create_shortcut_and_save: 创建快捷方式并保存设置
+    create_shortcut_and_save_tooltip: |
+      在桌面创建快捷方式并保存设置。
+      如果游戏需要管理员权限,启动时会自动请求。
+
+    save_only: 仅保存设置
+    save_only_tooltip: |
+      保存设置但不创建快捷方式。
+      要从命令行启动:
+      `PriconneMultiAccountLauncher.exe [文件名] --type game`
+
+    add_detail: 创建快速启动的快捷方式和设置。
+    edit_detail: 编辑快速启动快捷方式的设置。
+
+    file_select: 选择文件
+
+    product_id_not_entered: 未输入 product_id。
+    filename_not_entered: 未输入文件名。
+    account_path_not_entered: 未选择账号。
+    game_info_error: 获取游戏信息失败。
+    file_not_selected: 未选择文件。
+    save_success: 保存成功。
+    delete: 删除
+
+    account_edit_detail: 编辑快速启动 DMMGamePlayer 的设置。
+    dgp_args: DMMGamePlayer 参数
+    dgp_args_tooltip: |-
+      指定传递给 DMMGamePlayer 的参数。
+      例如 'dmmgameplayer://play/GCL/priconner/cl/win' 会在 DMMGamePlayer 中启动公主连结 Re:Dive。
+      留空则仅启动 DMMGamePlayer。
+    unity_command_line_args: 了解更多 Unity 命令行参数
+    unity_command_line_args_tooltip: |-
+      打开 Unity 命令行参数相关网站。
+      游戏由 Unity 制作时可能有帮助。
+    unity_command_line_args_link: https://docs.unity3d.com/Manual/PlayerCommandLineArguments.html
+
+  account:
+    import_detail: |-
+      将 DMMGamePlayer 的账号信息导入 PriconneMultiAccountLauncher。
+      此操作已弃用,推荐从浏览器导入。
+
+    filename_tooltip: |-
+      请为此账号命名。
+      使用非英数字字符可能会引起问题。
+    import: 导入
+    filename: 文件名
+    filename_not_entered: 未输入文件名。
+    filename_already_exists: 该文件名已存在。
+    filename_reserved: 该文件名为保留名称。
+    import_error: 导入失败。
+    import_success: 导入成功。
+
+    file_select: 选择文件
+
+    import_browser_detail: 启动浏览器以从 DMMGamePlayer 导入账号信息。
+    browser_select: 选择浏览器
+    auto_refresh: 自动刷新登录会话
+    browser_select_tooltip: |-
+      选择您偏好的浏览器。
+      指定的浏览器会启动并打开登录界面。
+    browser_not_selected: 未选择浏览器。
+    import_browser: 导入
+    import_browser_success: 导入成功。
+
+    edit_detail: |-
+      编辑账号信息。
+      这是高级操作。
+
+    save: 保存
+    delete: 删除
+    save_success: 保存成功。
+
+    device_detail: |-
+      请输入发送到您邮箱的「设备认证码」。
+
+    send_auth_code: 发送认证码
+    auth: 认证
+
+    hardware_name: 设备名称
+    auth_code: 设备认证码
+    auth_code_tooltip: |-
+      输入邮件中提供的字母数字码。
+    send_auth_code_success: 认证码发送成功。
+    auth_success: 认证成功。
+    device_list_success: 设备列表获取成功。
+    delete_success: 删除成功。
+
+    device_registrations: "已注册设备: %{count} / %{limit}"
+
+  setting:
+    save: 保存
+    reset_all_settings: 重置所有设置
+    confirm_reset: 确定要重置所有设置吗?
+    save_success: 设置保存成功。
+    dmm_game_player_program_folder: DMMGamePlayer 程序目录
+    dmm_game_player_data_folder: DMMGamePlayer 数据目录
+    lang: 语言
+    theme: 主题
+    appearance: 外观
+
+    font_preset: 字体预设
+    font_preset_tooltip: |-
+      选择字体预设。
+      auto:   匹配当前语言的最佳字体（推荐）。
+      system: Windows 默认字体。
+
+    proxy_all: 代理
+    proxy_all_tooltip: |-
+      设置游戏代理。
+      例如: http://127.0.0.1:80
+            https://127.0.0.1:443
+            socks5://127.0.0.1:1080
+            socks5://user:pass@127.0.0.1:1080
+
+    dmm_proxy_all: DMM 代理
+    dmm_proxy_all_tooltip: |-
+      设置 DMM 代理。
+      例如: http://127.0.0.1:80
+            https://127.0.0.1:443
+            socks5://127.0.0.1:1080
+            socks5://user:pass@127.0.0.1:1080
+
+    window_scaling: 窗口缩放
+    reset_to_auto: "重置为自动"
+    debug_window: 显示调试窗口
+    output_logfile: 输出日志到文件
+    mask_token: 隐藏日志中的令牌
+    disable_update_check: 禁用更新检查(不连接 GitHub)
+
+    device_detail: |-
+      配置设备认证用的设备信息。
+      这些值不需要准确。
+
+    mac_address: MAC 地址
+    hdd_serial: 硬盘序列号
+    motherboard: 主板 ID
+    user_os: 操作系统
+
+    other_detail: 在文本编辑器中编辑工具设置。
+    backup_detail: "跨设备备份。使用您的密码加密。在另一台 PC 上使用相同密码恢复。"
+    backup_section: "备份"
+    export_backup: "导出备份..."
+    import_backup: "导入备份..."
+    passphrase_prompt: "输入密码（至少 8 个字符）："
+    passphrase_too_short: "密码至少需要 8 个字符。"
+    export_success: "备份导出成功（%{count} 个账号）。"
+    import_success: "成功导入 %{count} 个账号。"
+
+    open_save_folder: 打开设置文件夹
+
+  help:
+    coop_in_develop: 参与开发
+    donations_to_developer: 赞助开发者
+    bug_report: 报告 Bug
+
+  launch:
+    export_error: 导出失败。
+    import_error: 导入失败。
+
+    admin_error: 需要管理员权限。
+
+  component:
+    required: 此字段为必填项。
+    required_symbol: "*"
+    reference: 浏览
+
+    "yes": "是"
+    "no": "否"
+
+    download: 下载中...
+
+  toast:
+    report: 报告
+    copy_to_clipboard: "复制到剪贴板"
+    details: 详情
+
+  lib:
+    dmm_already_running: DMMGamePlayer 已在运行,无法启动。
+
+  utils:
+    file_exists: 该文件已存在。

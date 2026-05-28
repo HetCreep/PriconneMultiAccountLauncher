@@ -1,0 +1,154 @@
+name: Release
+
+# Build + publish the Windows installer whenever a version tag is pushed.
+# Local builds are NOT distributed — every user-facing artifact comes from here
+# (see docs/security policy: users verify only via GitHub Release builds).
+#
+# Usage:
+#   1. Bump the version in env.py / setup.iss / tools/version_info.txt
+#   2. Update RELEASE_NOTES.md (Highlights & Fixes for this version)
+#   3. git tag v6.3.35 && git push origin v6.3.35
+#
+# NOTE (distribution-security.md): the `uses:` actions below should be pinned to
+# full commit SHAs before wide public trust. Tag refs are used here for
+# readability; pin in a follow-up.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Derive version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $ver = $tag.TrimStart('v')
+          "tag=$tag"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building $tag (version $ver)"
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.lock.txt
+          pip install pyinstaller
+
+      - name: Bundle LICENSE
+        shell: pwsh
+        run: python tools/build.py
+
+      - name: Build exe (PyInstaller)
+        shell: pwsh
+        run: |
+          pyinstaller PriconneMultiAccountLauncher/PriconneMultiAccountLauncher.py `
+            --noconsole --onefile `
+            --collect-all customtkinter --collect-all selenium `
+            --icon assets/icons/PriconneMultiAccountLauncher.ico `
+            --version-file tools/version_info.txt `
+            --name PriconneMultiAccountLauncher
+
+      - name: Stage windows dir
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force windows | Out-Null
+          Copy-Item dist/PriconneMultiAccountLauncher.exe windows/ -Force
+          Copy-Item assets windows/assets -Recurse -Force
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc setup.iss
+
+      - name: Package + checksums
+        id: pkg
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $setup = "PriconneMultiAccountLauncher-v$ver-setup.exe"
+          $zip   = "PriconneMultiAccountLauncher-v$ver.zip"
+          Copy-Item dist/PriconneMultiAccountLauncher-Setup.exe "dist/$setup" -Force
+          Compress-Archive -Path windows/* -DestinationPath "dist/$zip" -Force
+          $h1 = (Get-FileHash "dist/$setup" -Algorithm SHA256).Hash.ToLower()
+          $h2 = (Get-FileHash "dist/$zip"   -Algorithm SHA256).Hash.ToLower()
+          "$h1  $setup" | Out-File dist/SHA256SUMS.txt -Encoding ascii
+          "$h2  $zip"   | Out-File dist/SHA256SUMS.txt -Append -Encoding ascii
+          "setup=$setup" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "zip=$zip"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "setup_sha=$h1" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Generate SBOM
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.lock.txt --format cyclonedx-json -o dist/sbom.cdx.json
+
+      - name: Delete old releases (keep only this version's installer)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $current = "${{ steps.ver.outputs.tag }}"
+          $existing = gh release list --json tagName --jq '.[].tagName'
+          foreach ($r in $existing) {
+            if ($r -and ($r -ne $current)) {
+              Write-Host "Deleting old release + tag: $r"
+              gh release delete $r --yes --cleanup-tag
+            }
+          }
+
+      - name: Assemble release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $sha = "${{ steps.pkg.outputs.setup_sha }}"
+          $body = ""
+          if (Test-Path RELEASE_NOTES.md) { $body = Get-Content RELEASE_NOTES.md -Raw }
+          $nl = [char]10
+          $lines = @()
+          $lines += ""
+          $lines += "## Verification"
+          $lines += ""
+          $lines += ("- Installer SHA-256: ``" + $sha + "``")
+          $lines += "- Or compare against the attached SHA256SUMS.txt:"
+          $lines += ("  ``Get-FileHash -Algorithm SHA256 .\PriconneMultiAccountLauncher-v" + $ver + "-setup.exe``")
+          $verify = $lines -join $nl
+          ($body + $nl + $verify) | Out-File RELEASE_BODY.md -Encoding utf8
+
+      - name: Create release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          gh release create "${{ steps.ver.outputs.tag }}" `
+            "dist/${{ steps.pkg.outputs.setup }}" `
+            "dist/${{ steps.pkg.outputs.zip }}" `
+            "dist/SHA256SUMS.txt" `
+            "dist/sbom.cdx.json" `
+            --title "v$ver Release" `
+            --notes-file RELEASE_BODY.md

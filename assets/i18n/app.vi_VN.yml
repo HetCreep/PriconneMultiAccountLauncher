@@ -1,0 +1,241 @@
+# Bootstrap translation. Maintainer review + community PRs welcome.
+vi_VN:
+  title: Priconne Multi Account Launcher
+  language: Tiếng Việt
+
+  font:
+    main: "Segoe UI"
+
+  tab:
+    home: Trang chủ
+    shortcut: Lối tắt
+    account: Tài khoản
+    setting: Cài đặt
+    other: Khác
+    help: Trợ giúp
+    create: Tạo lối tắt
+    edit: Sửa lối tắt
+    general: "Chung"
+    appearance: "Giao diện"
+    advanced: "Nâng cao"
+    launch_create: Khởi chạy nhanh GamePlayer
+    launch_edit: Sửa khởi chạy nhanh GamePlayer
+    account_import: Nhập từ DMM
+    account_edit: Sửa tài khoản
+    import_browser: Nhập từ trình duyệt
+    device: Đăng ký thiết bị
+    backup: "Sao lưu"
+    device_list: Danh sách thiết bị
+
+  home:
+    new_version: Có phiên bản mới của Priconne Multi Account Launcher.
+
+  shortcut:
+    filename: Tên tệp
+    filename_tooltip: |
+      Đặt tên cho lối tắt này.
+      Dùng ký tự ngoài chữ số nửa chiều có thể gây lỗi.
+
+    product_id: Chọn product_id
+    product_id_tooltip: |
+      product_id là ID DMM dùng để nhận diện game.
+
+    account_create_detail: |-
+      Tạo lối tắt khởi chạy nhanh DMMGamePlayer.
+      Chọn tài khoản đã tạo trong tab 'Tài khoản'.
+
+    account_path: Chọn tài khoản
+    account_path_tooltip: |-
+      Chọn tài khoản đã tạo trong tab 'Tài khoản'.
+    always_extract_from_dmm: Luôn lấy từ DMM
+    game_args: Tham số game
+    game_args_tooltip: |-
+      Chỉ định tham số truyền cho game.
+      Với game Unity, ví dụ '-screen-fullscreen 0 -screen-width 1280 -screen-height 720' chạy cửa sổ 1280x720.
+    external_tool_path: Đường dẫn công cụ ngoài
+    external_tool_path_tooltip: Đường dẫn công cụ ngoài muốn dùng khi khởi chạy game.
+    registry_path: Đường dẫn Registry
+    registry_path_tooltip: Đường dẫn Windows registry dữ liệu game (đã khóa, sao lưu/khôi phục theo tài khoản).
+    auto_update: Tự cập nhật game khi khởi chạy
+
+    create_shortcut_and_save: Tạo lối tắt + Lưu
+    create_shortcut_and_save_tooltip: |
+      Tạo lối tắt desktop và lưu cài đặt.
+      Quyền admin (nếu game cần) được xử lý tự động khi khởi chạy.
+
+    save_only: Chỉ lưu cài đặt
+    save_only_tooltip: |
+      Lưu mà không tạo lối tắt.
+      Chạy từ dòng lệnh:
+      `PriconneMultiAccountLauncher.exe [Tên tệp] --type game`
+
+    add_detail: Tạo lối tắt và cài đặt khởi chạy nhanh.
+    edit_detail: Sửa cài đặt lối tắt khởi chạy nhanh.
+
+    file_select: Chọn tệp
+
+    product_id_not_entered: Chưa nhập product_id.
+    filename_not_entered: Chưa nhập tên tệp.
+    account_path_not_entered: Chưa chọn tài khoản.
+    game_info_error: Lấy thông tin game thất bại.
+    file_not_selected: Chưa chọn tệp.
+    save_success: Lưu thành công.
+    delete: Xóa
+
+    account_edit_detail: Sửa cài đặt khởi chạy nhanh DMMGamePlayer.
+    dgp_args: Tham số DMMGamePlayer
+    dgp_args_tooltip: |-
+      Chỉ định tham số truyền cho DMMGamePlayer.
+      Ví dụ 'dmmgameplayer://play/GCL/priconner/cl/win' sẽ khởi chạy Princess Connect! Re:Dive trong DMMGamePlayer.
+      Để trống chỉ khởi chạy DMMGamePlayer.
+    unity_command_line_args: Tìm hiểu tham số dòng lệnh Unity
+    unity_command_line_args_tooltip: |-
+      Mở trang web về tham số dòng lệnh Unity.
+      Hữu ích nếu game làm bằng Unity.
+    unity_command_line_args_link: https://docs.unity3d.com/Manual/PlayerCommandLineArguments.html
+
+  account:
+    import_detail: |-
+      Nhập thông tin tài khoản DMMGamePlayer vào PriconneMultiAccountLauncher.
+      Cách này đã ngừng dùng. Khuyến nghị nhập từ trình duyệt.
+
+    filename_tooltip: |-
+      Đặt tên cho tài khoản này.
+      Dùng ký tự không phải chữ số có thể gây lỗi.
+    import: Nhập
+    filename: Tên tệp
+    filename_not_entered: Chưa nhập tên tệp.
+    filename_already_exists: Tên tệp đã tồn tại.
+    filename_reserved: Tên tệp đã được giữ chỗ.
+    import_error: Nhập thất bại.
+    import_success: Nhập thành công.
+
+    file_select: Chọn tệp
+
+    import_browser_detail: Khởi chạy trình duyệt để nhập thông tin tài khoản từ DMMGamePlayer.
+    browser_select: Chọn trình duyệt
+    auto_refresh: Tự động làm mới phiên đăng nhập
+    browser_select_tooltip: |-
+      Chọn trình duyệt bạn ưa thích.
+      Trình duyệt sẽ khởi chạy và mở màn hình đăng nhập.
+    browser_not_selected: Chưa chọn trình duyệt.
+    import_browser: Nhập
+    import_browser_success: Nhập thành công.
+
+    edit_detail: |-
+      Sửa thông tin tài khoản.
+      Đây là thao tác nâng cao.
+
+    save: Lưu
+    delete: Xóa
+    save_success: Lưu thành công.
+
+    device_detail: |-
+      Nhập 'Mã xác thực thiết bị' đã gửi đến email của bạn.
+
+    send_auth_code: Gửi mã xác thực
+    auth: Xác thực
+
+    hardware_name: Tên thiết bị
+    auth_code: Mã xác thực thiết bị
+    auth_code_tooltip: |-
+      Nhập mã chữ số nhận được qua email.
+    send_auth_code_success: Gửi mã xác thực thành công.
+    auth_success: Xác thực thành công.
+    device_list_success: Lấy danh sách thiết bị thành công.
+    delete_success: Xóa thành công.
+
+    device_registrations: "Thiết bị đã đăng ký: %{count} / %{limit}"
+
+  setting:
+    save: Lưu
+    reset_all_settings: Đặt lại tất cả cài đặt
+    confirm_reset: Bạn có chắc muốn đặt lại tất cả cài đặt?
+    save_success: Lưu cài đặt thành công.
+    dmm_game_player_program_folder: Thư mục chương trình DMMGamePlayer
+    dmm_game_player_data_folder: Thư mục dữ liệu DMMGamePlayer
+    lang: Ngôn ngữ
+    theme: Giao diện
+    appearance: Hiển thị
+
+    font_preset: Bộ font
+    font_preset_tooltip: |-
+      Chọn bộ font.
+      auto:   Font khớp nhất với ngôn ngữ hiện tại (khuyến nghị).
+      system: Font mặc định của Windows.
+
+    proxy_all: Proxy
+    proxy_all_tooltip: |-
+      Cấu hình proxy của game.
+      Ví dụ: http://127.0.0.1:80
+             https://127.0.0.1:443
+             socks5://127.0.0.1:1080
+             socks5://user:pass@127.0.0.1:1080
+
+    dmm_proxy_all: DMM Proxy
+    dmm_proxy_all_tooltip: |-
+      Cấu hình proxy DMM.
+      Ví dụ: http://127.0.0.1:80
+             https://127.0.0.1:443
+             socks5://127.0.0.1:1080
+             socks5://user:pass@127.0.0.1:1080
+
+    window_scaling: Tỉ lệ cửa sổ
+    reset_to_auto: "Đặt lại Auto"
+    debug_window: Hiển thị cửa sổ Debug
+    output_logfile: Ghi log ra tệp
+    mask_token: Ẩn token trong log
+    disable_update_check: Tắt kiểm tra cập nhật (không gọi GitHub)
+
+    device_detail: |-
+      Cấu hình thông tin thiết bị cho xác thực thiết bị.
+      Các giá trị không cần chính xác.
+
+    mac_address: Địa chỉ MAC
+    hdd_serial: Số serial HDD
+    motherboard: ID bo mạch
+    user_os: OS
+
+    other_detail: Sửa cài đặt công cụ trong text editor.
+    backup_detail: "Sao lưu liên máy. Mã hóa bằng passphrase của bạn. Dùng cùng passphrase để khôi phục trên PC khác."
+    backup_section: "Sao lưu"
+    export_backup: "Xuất bản sao lưu..."
+    import_backup: "Nhập bản sao lưu..."
+    passphrase_prompt: "Nhập passphrase (tối thiểu 8 ký tự):"
+    passphrase_too_short: "Passphrase phải có ít nhất 8 ký tự."
+    export_success: "Đã xuất sao lưu (%{count} tài khoản)."
+    import_success: "Đã nhập %{count} tài khoản thành công."
+
+    open_save_folder: Mở thư mục cài đặt
+
+  help:
+    coop_in_develop: Đóng góp phát triển
+    donations_to_developer: Quyên góp cho nhà phát triển
+    bug_report: Báo lỗi
+
+  launch:
+    export_error: Xuất thất bại.
+    import_error: Nhập thất bại.
+
+    admin_error: Cần quyền admin.
+
+  component:
+    required: Trường này là bắt buộc.
+    required_symbol: "*"
+    reference: Chọn
+
+    "yes": "Có"
+    "no": "Không"
+
+    download: Đang tải...
+
+  toast:
+    report: Báo cáo
+    copy_to_clipboard: "Sao chép vào Clipboard"
+    details: Chi tiết
+
+  lib:
+    dmm_already_running: DMMGamePlayer đang chạy nên không thể khởi chạy.
+
+  utils:
+    file_exists: Tệp đó đã tồn tại.

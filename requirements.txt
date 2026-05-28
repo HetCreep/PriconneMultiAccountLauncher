@@ -1,0 +1,14 @@
+i18nice[YAML]
+coloredlogs
+customtkinter
+requests
+windows-pathlib
+selenium
+Pillow
+tkinter-colored-logging-handlers
+psutil
+requests
+pycryptodome
+pywin32
+pyinstaller
+pyinstaller-hooks-contrib

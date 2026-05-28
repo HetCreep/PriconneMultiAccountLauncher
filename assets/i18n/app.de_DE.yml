@@ -1,0 +1,241 @@
+# Bootstrap translation. Maintainer review + community PRs welcome.
+de_DE:
+  title: Priconne Multi Account Launcher
+  language: Deutsch
+
+  font:
+    main: "Segoe UI"
+
+  tab:
+    home: Start
+    shortcut: Verknüpfung
+    account: Konto
+    setting: Einstellungen
+    other: Sonstiges
+    help: Hilfe
+    create: Verknüpfung erstellen
+    edit: Verknüpfung bearbeiten
+    general: "Allgemein"
+    appearance: "Erscheinungsbild"
+    advanced: "Erweitert"
+    launch_create: GamePlayer Schnellstart
+    launch_edit: Schnellstart bearbeiten
+    account_import: Von DMM importieren
+    account_edit: Konto bearbeiten
+    import_browser: Aus Browser importieren
+    device: Gerät registrieren
+    backup: "Sicherung"
+    device_list: Geräteliste
+
+  home:
+    new_version: Eine neue Version von Priconne Multi Account Launcher ist verfügbar.
+
+  shortcut:
+    filename: Dateiname
+    filename_tooltip: |
+      Vergeben Sie einen beliebigen Namen für diese Verknüpfung.
+      Andere Zeichen als alphanumerische können Probleme verursachen.
+
+    product_id: product_id wählen
+    product_id_tooltip: |
+      product_id ist die von DMM verwendete Spiel-ID.
+
+    account_create_detail: |-
+      Erstellt eine Verknüpfung für den Schnellstart von DMMGamePlayer.
+      Wählen Sie das im Tab „Konto" erstellte Konto.
+
+    account_path: Konto wählen
+    account_path_tooltip: |-
+      Wählen Sie das im Tab „Konto" erstellte Konto.
+    always_extract_from_dmm: Immer aus DMM extrahieren
+    game_args: Spielargumente
+    game_args_tooltip: |-
+      Argumente, die an das Spiel übergeben werden.
+      Bei Unity-Spielen z. B. '-screen-fullscreen 0 -screen-width 1280 -screen-height 720' startet im Fenster 1280x720.
+    external_tool_path: Pfad zum externen Tool
+    external_tool_path_tooltip: Pfad zu einem externen Tool, das beim Spielstart verwendet werden soll.
+    registry_path: Registry-Pfad
+    registry_path_tooltip: Windows-Registry-Pfad der Spieldaten (gesperrt, automatische Sicherung/Wiederherstellung pro Konto).
+    auto_update: Spiel beim Start automatisch aktualisieren
+
+    create_shortcut_and_save: Verknüpfung erstellen + Speichern
+    create_shortcut_and_save_tooltip: |
+      Desktop-Verknüpfung erstellen und Einstellungen speichern.
+      Admin-Rechte (falls vom Spiel benötigt) werden beim Start automatisch angefordert.
+
+    save_only: Nur Einstellungen speichern
+    save_only_tooltip: |
+      Speichert ohne Verknüpfung zu erstellen.
+      Start über Befehlszeile:
+      `PriconneMultiAccountLauncher.exe [Dateiname] --type game`
+
+    add_detail: Verknüpfung und Einstellungen für Schnellstart erstellen.
+    edit_detail: Einstellungen der Schnellstart-Verknüpfung bearbeiten.
+
+    file_select: Datei auswählen
+
+    product_id_not_entered: product_id nicht eingegeben.
+    filename_not_entered: Dateiname nicht eingegeben.
+    account_path_not_entered: Kein Konto ausgewählt.
+    game_info_error: Spielinformationen konnten nicht abgerufen werden.
+    file_not_selected: Keine Datei ausgewählt.
+    save_success: Erfolgreich gespeichert.
+    delete: Löschen
+
+    account_edit_detail: Einstellungen für den Schnellstart von DMMGamePlayer bearbeiten.
+    dgp_args: DMMGamePlayer-Argumente
+    dgp_args_tooltip: |-
+      Argumente, die an DMMGamePlayer übergeben werden.
+      Beispiel: 'dmmgameplayer://play/GCL/priconner/cl/win' startet Princess Connect! Re:Dive in DMMGamePlayer.
+      Leer lassen, um nur DMMGamePlayer zu starten.
+    unity_command_line_args: Mehr über Unity-Kommandozeilenargumente erfahren
+    unity_command_line_args_tooltip: |-
+      Öffnet eine Seite zu Unity-Kommandozeilenargumenten.
+      Hilfreich, wenn das Spiel mit Unity erstellt wurde.
+    unity_command_line_args_link: https://docs.unity3d.com/Manual/PlayerCommandLineArguments.html
+
+  account:
+    import_detail: |-
+      Importiert DMMGamePlayer-Kontoinformationen in PriconneMultiAccountLauncher.
+      Diese Methode ist veraltet. Import über Browser wird empfohlen.
+
+    filename_tooltip: |-
+      Vergeben Sie einen Namen für dieses Konto.
+      Nicht-alphanumerische Zeichen können Probleme verursachen.
+    import: Importieren
+    filename: Dateiname
+    filename_not_entered: Dateiname nicht eingegeben.
+    filename_already_exists: Dieser Dateiname existiert bereits.
+    filename_reserved: Der Dateiname ist reserviert.
+    import_error: Import fehlgeschlagen.
+    import_success: Import erfolgreich.
+
+    file_select: Datei auswählen
+
+    import_browser_detail: Startet den Browser, um Kontoinformationen aus DMMGamePlayer zu importieren.
+    browser_select: Browser auswählen
+    auto_refresh: Login-Sitzung automatisch aktualisieren
+    browser_select_tooltip: |-
+      Wählen Sie Ihren bevorzugten Browser.
+      Der angegebene Browser wird gestartet und öffnet den Anmeldebildschirm.
+    browser_not_selected: Kein Browser ausgewählt.
+    import_browser: Importieren
+    import_browser_success: Import erfolgreich.
+
+    edit_detail: |-
+      Kontoinformationen bearbeiten.
+      Erweiterte Operation.
+
+    save: Speichern
+    delete: Löschen
+    save_success: Erfolgreich gespeichert.
+
+    device_detail: |-
+      Geben Sie den „Geräteauthentifizierungscode" ein, der an Ihre E-Mail-Adresse gesendet wurde.
+
+    send_auth_code: Authentifizierungscode senden
+    auth: Authentifizieren
+
+    hardware_name: Gerätename
+    auth_code: Geräteauthentifizierungscode
+    auth_code_tooltip: |-
+      Geben Sie den alphanumerischen Code aus der E-Mail ein.
+    send_auth_code_success: Authentifizierungscode erfolgreich gesendet.
+    auth_success: Authentifizierung erfolgreich.
+    device_list_success: Geräteliste erfolgreich abgerufen.
+    delete_success: Erfolgreich gelöscht.
+
+    device_registrations: "Registrierte Geräte: %{count} / %{limit}"
+
+  setting:
+    save: Speichern
+    reset_all_settings: Alle Einstellungen zurücksetzen
+    confirm_reset: Sind Sie sicher, dass Sie alle Einstellungen zurücksetzen möchten?
+    save_success: Einstellungen erfolgreich gespeichert.
+    dmm_game_player_program_folder: DMMGamePlayer-Programmordner
+    dmm_game_player_data_folder: DMMGamePlayer-Datenordner
+    lang: Sprache
+    theme: Design
+    appearance: Erscheinungsbild
+
+    font_preset: Schriftart-Voreinstellung
+    font_preset_tooltip: |-
+      Schriftart-Voreinstellung wählen.
+      auto:   Beste Schrift für die aktuelle Sprache (empfohlen).
+      system: Windows-Standardschrift.
+
+    proxy_all: Proxy
+    proxy_all_tooltip: |-
+      Konfigurieren Sie den Spiel-Proxy.
+      Beispiel: http://127.0.0.1:80
+                https://127.0.0.1:443
+                socks5://127.0.0.1:1080
+                socks5://user:pass@127.0.0.1:1080
+
+    dmm_proxy_all: DMM-Proxy
+    dmm_proxy_all_tooltip: |-
+      Konfigurieren Sie den DMM-Proxy.
+      Beispiel: http://127.0.0.1:80
+                https://127.0.0.1:443
+                socks5://127.0.0.1:1080
+                socks5://user:pass@127.0.0.1:1080
+
+    window_scaling: Fensterskalierung
+    reset_to_auto: "Auf Auto zurücksetzen"
+    debug_window: Debug-Fenster anzeigen
+    output_logfile: In Datei protokollieren
+    mask_token: Tokens im Protokoll ausblenden
+    disable_update_check: Update-Prüfung deaktivieren (keine GitHub-Aufrufe)
+
+    device_detail: |-
+      Geräteinformationen für die Geräteauthentifizierung konfigurieren.
+      Diese Werte müssen nicht exakt sein.
+
+    mac_address: MAC-Adresse
+    hdd_serial: HDD-Seriennummer
+    motherboard: Mainboard-ID
+    user_os: OS
+
+    other_detail: Tool-Einstellungen in einem Texteditor bearbeiten.
+    backup_detail: "Sicherung zwischen PCs. Mit Ihrer Passphrase verschlüsselt. Dieselbe Passphrase zum Wiederherstellen verwenden."
+    backup_section: "Sicherung"
+    export_backup: "Sicherung exportieren..."
+    import_backup: "Sicherung importieren..."
+    passphrase_prompt: "Passphrase eingeben (mindestens 8 Zeichen):"
+    passphrase_too_short: "Passphrase muss mindestens 8 Zeichen lang sein."
+    export_success: "Sicherung exportiert (%{count} Konto/Konten)."
+    import_success: "%{count} Konto/Konten erfolgreich importiert."
+
+    open_save_folder: Einstellungsordner öffnen
+
+  help:
+    coop_in_develop: Zur Entwicklung beitragen
+    donations_to_developer: An den Entwickler spenden
+    bug_report: Fehler melden
+
+  launch:
+    export_error: Export fehlgeschlagen.
+    import_error: Import fehlgeschlagen.
+
+    admin_error: Administratorrechte erforderlich.
+
+  component:
+    required: Dieses Feld ist erforderlich.
+    required_symbol: "*"
+    reference: Durchsuchen
+
+    "yes": "Ja"
+    "no": "Nein"
+
+    download: Wird heruntergeladen...
+
+  toast:
+    report: Melden
+    copy_to_clipboard: "In die Zwischenablage kopieren"
+    details: Details
+
+  lib:
+    dmm_already_running: DMMGamePlayer läuft bereits und kann nicht gestartet werden.
+
+  utils:
+    file_exists: Diese Datei existiert bereits.

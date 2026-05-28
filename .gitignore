@@ -1,0 +1,36 @@
+/build
+/dist
+/*.spec
+__pycache__
+*.exe
+*.bytes
+/.venv
+
+
+
+/data
+
+# Build staging dir (exe + copied assets) — produced by tools/build.ps1, never committed.
+/windows/
+
+assets/license/LICENSE
+
+# AI / agent / IDE docs — stay local per memory `feedback-ai-docs-private`
+/.claude/
+/.cursor/
+/.windsurf/
+/.vs/
+/AGENTS.md
+/CLAUDE.md
+/MEMORY.md
+/GEMINI.md
+/.aider*
+/.continue/
+
+# Misc local
+/htmlcov/
+*.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tsbuildinfo
