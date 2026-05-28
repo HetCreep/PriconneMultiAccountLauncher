@@ -106,17 +106,28 @@ jobs:
           pip install pip-audit
           pip-audit -r requirements.lock.txt --format cyclonedx-json -o dist/sbom.cdx.json
 
-      - name: Delete old releases (keep only this version's installer)
+      - name: Strip installer assets from old releases (keep source code only)
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Policy: keep every release + tag for history, but only the LATEST
+          # release offers the installer/zip/checksums/SBOM. Older releases keep
+          # just their GitHub-generated "Source code" archive (which is tied to
+          # the tag and cannot be uploaded/deleted) — this stops users from
+          # downloading a stale installer while preserving auditable history.
           $current = "${{ steps.ver.outputs.tag }}"
           $existing = gh release list --json tagName --jq '.[].tagName'
           foreach ($r in $existing) {
             if ($r -and ($r -ne $current)) {
-              Write-Host "Deleting old release + tag: $r"
-              gh release delete $r --yes --cleanup-tag
+              Write-Host "Stripping installer assets from old release: $r (keeping source code)"
+              $assets = gh release view $r --json assets --jq '.assets[].name'
+              foreach ($a in $assets) {
+                if ($a) {
+                  Write-Host "  deleting asset: $a"
+                  gh release delete-asset $r "$a" --yes
+                }
+              }
             }
           }
 

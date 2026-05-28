@@ -6,6 +6,7 @@ from typing import Optional
 import i18n
 from customtkinter import CTkFont, CTkFrame, CTkImage, CTkLabel
 from lib.toast import ToastController
+from lib.version import Version
 from lib.version_check import get_latest_version
 from models.setting_data import AppConfig
 from PIL import Image
@@ -33,6 +34,19 @@ class HomeTab(CTkFrame):
             )
         return cls._image_cache
 
+    @staticmethod
+    def _is_newer(latest: str, current: str) -> bool:
+        """True only when `latest` is a strictly newer, parseable version than `current`.
+
+        Guards against a stale update-check cache (data/ is preserved across
+        upgrades) still naming an older/equal tag — never nag when already current.
+        """
+        try:
+            return Version(latest) > Version(current)
+        except ValueError:
+            logger.debug("Update-check: unparseable version (latest=%r current=%r)", latest, current)
+            return False
+
     def create(self):
         frame = CTkFrame(self, fg_color="transparent")
         frame.pack(anchor="center", expand=1)
@@ -45,7 +59,7 @@ class HomeTab(CTkFrame):
         if HomeTab.update_flag is False:
             disabled = AppConfig.DATA.disable_update_check.get()
             latest = get_latest_version(Env.VERSION, disabled=disabled)
-            if latest != Env.VERSION:
+            if self._is_newer(latest, Env.VERSION):
                 logger.info("Update available: current=%s latest=%s", Env.VERSION, latest)
                 HomeTab.update_flag = True
                 # Toast text reminds user to verify SHA-256 on the release page

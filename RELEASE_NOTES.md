@@ -1,15 +1,15 @@
-This is a maintenance release. It makes in-place updates smoother: the installer now closes the running launcher for you instead of stopping with a "could not close applications" prompt.
+This release fixes a false "update available" notification, and changes how older releases are published so nobody installs a stale build.
 
 ## Highlights & Fixes
 
-- **Updating no longer stalls on "Setup was unable to automatically close all applications"**:
-  - When you run the installer while the launcher is still open, Setup now closes the running app automatically and continues. Previously the wizard could stall, because the packaged (PyInstaller, windowless) app did not respond to the Windows Restart Manager's graceful-close request.
-  - This forced close is safe: account switching is registry-only and the launcher restores its baseline on the next start (crash-recovery path), so an interrupted session never corrupts account state.
+- **No more false "update available" prompt**:
+  - The in-app update check now compares semantic versions (`latest > current`) instead of a plain string match. Previously a stale update-check cache (kept across upgrades) could keep showing "a new version is available" even when you were already on the newest build.
 
 ## Build & Distribution
 
 - Builds run entirely in GitHub Actions on every version tag. Local builds are not distributed.
-- Each release publishes the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM (`sbom.cdx.json`). Older releases are removed automatically so only the latest installer is offered.
+- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM (`sbom.cdx.json`).
+- **Older releases keep only their source code** — their installers are removed automatically, so everyone installs the current build while the full version history and source stay available for audit.
 
 ## Compatibility
 
@@ -20,4 +20,4 @@ This is a maintenance release. It makes in-place updates smoother: the installer
 ## Upgrade Notes
 
 - No action required. Existing accounts and shortcuts are preserved.
-- If you upgrade from v6.3.35 with the launcher still running, just continue through the installer — it now closes and relaunches the app for you.
+- If v6.3.36 still showed a false "update available" toast, this build clears it. (You can also delete `data\update_check_cache.json` to refresh immediately.)
