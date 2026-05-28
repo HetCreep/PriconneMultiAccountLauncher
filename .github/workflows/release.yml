@@ -43,6 +43,27 @@ jobs:
           "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           Write-Host "Building $tag (version $ver)"
 
+      - name: Guard — only publish the newest version tag
+        id: guard
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Re-pushing an OLD tag (e.g. to restore a source-only release) also
+          # triggers this workflow. Don't let it republish an old version or strip
+          # the current one. The publish steps (strip old / create release) run
+          # only when this tag is the highest semver among all tags.
+          $tag = "${{ steps.ver.outputs.tag }}"
+          function ToVer($t) { if ($t -match '^v(\d+)\.(\d+)\.(\d+)$') { return [version]("{0}.{1}.{2}" -f $matches[1], $matches[2], $matches[3]) }; return $null }
+          $cur = ToVer $tag
+          $skip = $false
+          if ($null -ne $cur) {
+            $all = gh api "repos/${{ github.repository }}/tags?per_page=100" --jq '.[].name'
+            foreach ($t in $all) { $v = ToVer $t; if ($v -and $v -gt $cur) { Write-Host "Newer tag exists: $t (> $tag)"; $skip = $true; break } }
+          }
+          if ($skip) { Write-Host "::warning::$tag is not the newest tag — skipping publish (strip + release create)." }
+          "skip=$($skip.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Install dependencies
         shell: pwsh
         run: |
@@ -107,6 +128,7 @@ jobs:
           pip-audit -r requirements.lock.txt --format cyclonedx-json -o dist/sbom.cdx.json
 
       - name: Strip installer assets from old releases (keep source code only)
+        if: steps.guard.outputs.skip != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -151,6 +173,7 @@ jobs:
           ($body + $nl + $verify) | Out-File RELEASE_BODY.md -Encoding utf8
 
       - name: Create release
+        if: steps.guard.outputs.skip != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
