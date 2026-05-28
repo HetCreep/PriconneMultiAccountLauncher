@@ -7,7 +7,7 @@ name: Release
 # Usage:
 #   1. Bump the version in env.py / setup.iss / tools/version_info.txt
 #   2. Update RELEASE_NOTES.md (Highlights & Fixes for this version)
-#   3. git tag v6.3.35 && git push origin v6.3.35
+#   3. git tag v6.3.36 && git push origin v6.3.36
 #
 # NOTE (distribution-security.md): the `uses:` actions below should be pinned to
 # full commit SHAs before wide public trust. Tag refs are used here for

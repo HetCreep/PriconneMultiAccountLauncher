@@ -20,6 +20,7 @@ assets/license/LICENSE
 /.cursor/
 /.windsurf/
 /.vs/
+/.vscode/
 /AGENTS.md
 /CLAUDE.md
 /MEMORY.md

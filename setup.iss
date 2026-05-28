@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "PriconneMultiAccountLauncher"
-#define MyAppVersion "6.3.35"
+#define MyAppVersion "6.3.36"
 #define MyAppPublisher "HetCreep"
 #define MyAppURL "https://github.com/HetCreep/PriconneMultiAccountLauncher"
 #define MyAppExeName "PriconneMultiAccountLauncher.exe"
@@ -48,6 +48,16 @@ LicenseFile=LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
+; Updating over a running launcher: the PyInstaller --onefile --noconsole exe
+; does not respond to the Windows Restart Manager's graceful-close request, so
+; Setup would otherwise stall on "unable to automatically close all
+; applications". force = terminate the process directly. Safe here because the
+; account swap is registry-only and the baseline is restored on the next launch
+; (crash-recovery path), so a hard stop mid-session never corrupts account data.
+CloseApplications=force
+; We relaunch via the [Run] postinstall entry ourselves; don't let the Restart
+; Manager also try to restart the app (avoids a double-launch / restart hang).
+RestartApplications=no
 OutputDir=dist
 OutputBaseFilename=PriconneMultiAccountLauncher-Setup
 Compression=lzma
