@@ -2,7 +2,7 @@
 
 A secure, ultra-fast, and flawless multi-account switcher and launcher for the PC version of Princess Connect! Re:Dive (DMM version).
 
-[![GitHub Downloads](https://img.shields.io/github/downloads/HetCreep/PriconneMultiAccountLauncher/total)](https://github.com/HetCreep/PriconneMultiAccountLauncher/releases)
+[![Latest Release](https://img.shields.io/github/v/release/HetCreep/PriconneMultiAccountLauncher?sort=semver)](https://github.com/HetCreep/PriconneMultiAccountLauncher/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
