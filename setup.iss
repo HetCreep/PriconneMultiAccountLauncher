@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "PriconneMultiAccountLauncher"
-#define MyAppVersion "6.3.37"
+#define MyAppVersion "6.3.38"
 #define MyAppPublisher "HetCreep"
 #define MyAppURL "https://github.com/HetCreep/PriconneMultiAccountLauncher"
 #define MyAppExeName "PriconneMultiAccountLauncher.exe"

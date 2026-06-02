@@ -1,15 +1,14 @@
-This release fixes a false "update available" notification, and changes how older releases are published so nobody installs a stale build.
+This is a small maintenance release. It relaxes how often the app checks for updates — this is a stable desktop tool, not a browser, so a daily check was unnecessary.
 
 ## Highlights & Fixes
 
-- **No more false "update available" prompt**:
-  - The in-app update check now compares semantic versions (`latest > current`) instead of a plain string match. Previously a stale update-check cache (kept across upgrades) could keep showing "a new version is available" even when you were already on the newest build.
+- **Update check is now weekly instead of daily**:
+  - The notify-only update check now reuses its cached result for 7 days (was 24 hours). Releases are infrequent, so this is plenty to surface a new version while cutting background GitHub API traffic. You can still disable the check entirely in Settings → Advanced.
 
 ## Build & Distribution
 
 - Builds run entirely in GitHub Actions on every version tag. Local builds are not distributed.
-- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM (`sbom.cdx.json`).
-- **Older releases keep only their source code** — their installers are removed automatically, so everyone installs the current build while the full version history and source stay available for audit.
+- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM (`sbom.cdx.json`). Older releases keep only their source code — their installers are removed automatically.
 
 ## Compatibility
 
@@ -20,4 +19,3 @@ This release fixes a false "update available" notification, and changes how olde
 ## Upgrade Notes
 
 - No action required. Existing accounts and shortcuts are preserved.
-- If v6.3.36 still showed a false "update available" toast, this build clears it. (You can also delete `data\update_check_cache.json` to refresh immediately.)

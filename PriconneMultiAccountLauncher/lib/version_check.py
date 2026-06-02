@@ -17,7 +17,10 @@ from static.config import DataPathConfig, UrlConfig
 
 logger = logging.getLogger(__name__)
 
-CACHE_TTL_SEC = 24 * 60 * 60
+# 7 days: this is a stable desktop tool, not a browser — releases are
+# infrequent (mostly bug fixes when a user reports one), so a weekly
+# notify-only check is plenty and keeps GitHub API traffic minimal.
+CACHE_TTL_SEC = 7 * 24 * 60 * 60
 
 
 def _cache_path():
