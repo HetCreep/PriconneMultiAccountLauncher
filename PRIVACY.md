@@ -47,7 +47,7 @@ If the launcher detects it is running inside Sandboxie or Cameyo, it logs a warn
 ## 7. Update Check
 
 - Connects to `api.github.com/repos/HetCreep/PriconneMultiAccountLauncher/releases/latest`.
-- Cached on disk for 24 hours to avoid spamming the API.
+- Cached on disk for 7 days to avoid spamming the API.
 - Disable in Settings → "Disable update check (no calls to GitHub)".
 - The launcher never auto-downloads or auto-installs. A toast notifies you, and clicking it opens the GitHub release page in your default browser.
 
