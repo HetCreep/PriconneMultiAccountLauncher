@@ -1,4 +1,4 @@
-name: "[en] 🐛 Report a Bug"
+name: "🐛 Report a Bug"
 description: Report a bug in PriconneMultiAccountLauncher.
 labels: ["bug"]
 body:
@@ -23,9 +23,10 @@ body:
       label: Bug Description
       description: Please provide detailed information about the bug. Attach images if necessary.
       placeholder: |
-        The shortcut for Princess Connect Re:Dive does not launch when the setting is xxxxxx.
-        The shortcut for Uma Musume launches successfully.
-        The product_id for Princess Connect Re:Dive is xxxxx.
+        A launch shortcut does not start the game when <setting> is <value>.
+        The launcher opens but the game window never appears.
+        Switching accounts unexpectedly re-downloads game data.
+        Steps to reproduce, expected vs. actual behavior, etc.
         ...
     validations:
       required: true
