@@ -2,8 +2,8 @@
 # Generated for File Properties → Details (CompanyName, ProductVersion, etc.).
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(6, 3, 38, 0),
-    prodvers=(6, 3, 38, 0),
+    filevers=(6, 3, 39, 0),
+    prodvers=(6, 3, 39, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -19,12 +19,12 @@ VSVersionInfo(
           [
             StringStruct('CompanyName', 'HetCreep'),
             StringStruct('FileDescription', 'PriconneMultiAccountLauncher'),
-            StringStruct('FileVersion', '6.3.38'),
+            StringStruct('FileVersion', '6.3.39'),
             StringStruct('InternalName', 'PriconneMultiAccountLauncher'),
             StringStruct('LegalCopyright', 'Copyright (c) HetCreep. MIT License.'),
             StringStruct('OriginalFilename', 'PriconneMultiAccountLauncher.exe'),
             StringStruct('ProductName', 'PriconneMultiAccountLauncher'),
-            StringStruct('ProductVersion', '6.3.38'),
+            StringStruct('ProductVersion', '6.3.39'),
           ],
         )
       ]

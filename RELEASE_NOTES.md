@@ -1,14 +1,18 @@
-This is a small maintenance release. It relaxes how often the app checks for updates — this is a stable desktop tool, not a browser, so a daily check was unnecessary.
+This release is internal security hardening for the local logging and credential-storage paths. No user-facing behavior changes.
 
 ## Highlights & Fixes
 
-- **Update check is now weekly instead of daily**:
-  - The notify-only update check now reuses its cached result for 7 days (was 24 hours). Releases are infrequent, so this is plenty to surface a new version while cutting background GitHub API traffic. You can still disable the check entirely in Settings → Advanced.
+- **Log redaction now covers all log outputs**:
+  - The credential-redaction filter is now attached to every log handler (file, console, debug window), not just the root logger. Previously, log lines emitted by submodules could reach the log file before redaction ran. Tokens, cookies, and hardware identifiers are now stripped on every output.
+- **Log-injection hardening**:
+  - Carriage-return / line-feed / tab characters in logged values are now encoded, so data from external sources can't forge fake log lines.
+- **DPAPI calls hardened**:
+  - Windows credential encrypt/decrypt now passes `CRYPTPROTECT_UI_FORBIDDEN`, ensuring no unexpected prompt can appear, and continues to use the current-user scope only (never machine scope).
 
 ## Build & Distribution
 
 - Builds run entirely in GitHub Actions on every version tag. Local builds are not distributed.
-- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM (`sbom.cdx.json`). Older releases keep only their source code — their installers are removed automatically.
+- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM. Older releases keep only their source code.
 
 ## Compatibility
 

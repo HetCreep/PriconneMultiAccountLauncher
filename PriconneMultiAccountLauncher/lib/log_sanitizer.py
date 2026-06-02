@@ -3,8 +3,10 @@
 Implements [domain/log-sanitization.md]. Substitutes credential-bearing
 values in every LogRecord before any handler formats it.
 
-`install_redaction_filter()` installs the filter on the root logger so
-every module logger inherits it.
+`install_redaction_filter()` installs the filter on every root HANDLER (not the
+root logger): a filter on the root logger only runs for records that logger
+processes directly, while records from child loggers (`getLogger(__name__)`)
+propagate to the root *handlers* and bypass the root logger's filters.
 """
 
 import logging
@@ -26,9 +28,15 @@ _KEY_PATTERN: Final = re.compile(
 )
 
 
+def _sanitize_for_log_injection(text: str) -> str:
+    """Encode CR/LF/TAB so user-controlled data cannot forge fake log lines (OWASP Log Injection)."""
+    return text.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+
+
 def redact(text: str) -> str:
-    """Return the input text with credential-shaped substrings replaced."""
-    out = _KEY_PATTERN.sub(lambda m: f"{m.group(1)}=[REDACTED]", text)
+    """Return the input text with control chars neutralized and credential-shaped substrings replaced."""
+    out = _sanitize_for_log_injection(text)
+    out = _KEY_PATTERN.sub(lambda m: f"{m.group(1)}=[REDACTED]", out)
     for pat in _TOKEN_PATTERNS:
         out = pat.sub("[REDACTED:token]", out)
     return out
@@ -56,9 +64,14 @@ class RedactionFilter(logging.Filter):
 
 
 def install_redaction_filter() -> None:
-    """Attach RedactionFilter to the root logger; idempotent."""
+    """Attach RedactionFilter to every root handler + the root logger; idempotent.
+
+    Must be called AFTER handlers are attached (e.g. after logging.basicConfig).
+    Handler-level attachment is what actually redacts child-logger records.
+    """
     root = logging.getLogger()
-    for f in root.filters:
-        if isinstance(f, RedactionFilter):
-            return
-    root.addFilter(RedactionFilter())
+    if not any(isinstance(f, RedactionFilter) for f in root.filters):
+        root.addFilter(RedactionFilter())
+    for handler in root.handlers:
+        if not any(isinstance(f, RedactionFilter) for f in handler.filters):
+            handler.addFilter(RedactionFilter())

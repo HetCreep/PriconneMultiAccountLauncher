@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SEC: tuple[float, float] = (10.0, 60.0)
 
+# DPAPI flag (Microsoft DPAPI docs): forbid any UI prompt — this is a non-interactive
+# context, so a prompt would hang. Value 0x1 = CRYPTPROTECT_UI_FORBIDDEN.
+CRYPTPROTECT_UI_FORBIDDEN = 0x1
+
 
 def _build_retry_adapter() -> HTTPAdapter:
     """urllib3 Retry with exponential backoff. backoff_jitter present in urllib3 2.x; if older urllib3 is bundled, fall back to plain exponential."""
@@ -209,9 +213,15 @@ class DgpSessionV2:
     def write_bytes(self, file: str) -> None:
         data_to_write = self.actauth.copy()
         data_to_write["_device_params"] = self.device_params
+        # Args: (DataIn, DataDescr, OptionalEntropy, Reserved, PromptStruct, Flags).
+        # PromptStruct=None (deprecated, removed Feb 2027); Flags=UI_FORBIDDEN. CurrentUser scope (no LOCAL_MACHINE).
         data = win32crypt.CryptProtectData(
             json.dumps(data_to_write).encode(),
             self.DATA_DESCR,
+            None,
+            None,
+            None,
+            CRYPTPROTECT_UI_FORBIDDEN,
         )
         self._rotate_backup_ring(file)
         # Atomic write — tmp + os.replace so a crash mid-write doesn't leave half a blob.
@@ -232,7 +242,8 @@ class DgpSessionV2:
     def read_bytes(self, file: str) -> None:
         with open(file, "rb") as f:
             data = f.read()
-        _, contents = win32crypt.CryptUnprotectData(data)
+        # Args: (DataIn, OptionalEntropy, Reserved, PromptStruct, Flags). PromptStruct=None; Flags=UI_FORBIDDEN.
+        _, contents = win32crypt.CryptUnprotectData(data, None, None, None, CRYPTPROTECT_UI_FORBIDDEN)
         parsed = json.loads(contents.decode())
         if "_device_params" in parsed:
             self.device_params = parsed.pop("_device_params")
@@ -379,7 +390,7 @@ class DgpSessionV2:
         with open(self.DGP5_DATA_PATH.joinpath("Local State"), "r", encoding="utf-8") as f:
             local_state = json.load(f)
         encrypted_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"].encode())[5:]
-        key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
+        key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, CRYPTPROTECT_UI_FORBIDDEN)[1]
         DgpSessionV2._aes_key_cache[path_key] = key
         return key
 
