@@ -198,6 +198,9 @@ class GameLauncher(CTk):
                     logger.debug("External tool process already gone: %s", exc)
 
 
+# NOTE: "Lanch" keeps the upstream (fa0311) spelling — a typo for "Launch".
+# Kept intentionally so this class still lines up when diffing against upstream.
+# Do NOT "fix" the spelling: renaming silently breaks that parity.
 class LanchLauncher(CTk):
     loder: Callable
 

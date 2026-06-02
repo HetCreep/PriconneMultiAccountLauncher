@@ -275,6 +275,10 @@ class DgpSessionV2:
         logger.debug("response %d (%d bytes)", res.status_code, len(res.content or b""))
         return res
 
+    # NOTE: "lunch" keeps the upstream (fa0311) spelling — a typo for "launch".
+    # Kept intentionally for upstream-diff parity; do NOT rename. The game_type
+    # routing below ("ACL"/"AMAIN"/"GMAIN") is upstream's multi-game support —
+    # harmless dead branches here since product_id is locked to "priconner" (GCL).
     def lunch(self, product_id: str, game_type: str) -> requests.Response:
         if game_type in ("GCL", "ACL"):
             url = self.LAUNCH_CL
