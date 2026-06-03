@@ -1,3 +1,4 @@
+import contextlib
 import ctypes
 import logging
 import os
@@ -154,19 +155,15 @@ class Schtasks:
         rc = ProcessManager.admin_run(create_args)
         if rc <= 32:
             # Roll back the XML side-effect so check() reflects reality.
-            try:
+            with contextlib.suppress(OSError):
                 xml_path.unlink()
-            except OSError:
-                pass
             raise RuntimeError(f"Scheduled task registration failed (ShellExecute rc={rc}, likely UAC denied)")
 
     def delete(self) -> None:
         delete_args = [str(Env.SCHTASKS), "/delete", "/tn", self.name, "/f"]
         ProcessManager.admin_run(delete_args)
-        try:
+        with contextlib.suppress(OSError):
             self._xml_path().unlink()
-        except OSError:
-            pass
 
 
 class Shortcut:

@@ -1,5 +1,6 @@
 import base64
 import concurrent.futures
+import contextlib
 import hashlib
 import json
 import logging
@@ -233,10 +234,9 @@ class DgpSessionV2:
                 os.fsync(f.fileno())
             os.replace(tmp, file)
         except Exception:
-            try:
+            # Best-effort cleanup of the partial tmp file; ignore if it's already gone.
+            with contextlib.suppress(OSError):
                 os.unlink(tmp)
-            except OSError:
-                pass
             raise
 
     def read_bytes(self, file: str) -> None:
