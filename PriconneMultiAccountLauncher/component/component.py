@@ -129,7 +129,7 @@ class EntryComponent(CTkFrame):
         if event.keysym in ["backslash", "colon", "slash", "asterisk", "question", "quote", "less", "greater", "pipe"]:
             return "break"
         if char.isascii():
-            return
+            return None
         return "break"
 
 
