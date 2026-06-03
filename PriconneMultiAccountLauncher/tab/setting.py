@@ -12,7 +12,7 @@ import i18n
 logger = logging.getLogger(__name__)
 from component.component import CheckBoxComponent, ConfirmWindow, DirectoryPathComponent, EntryComponent, OptionMenuComponent, OptionMenuTupleComponent, PaddingComponent
 from component.tab_menu import TabMenuComponent
-from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkInputDialog, CTkLabel, CTkScrollableFrame, CTkSlider
+from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkInputDialog, CTkLabel, CTkSlider
 from component.auto_scroll_frame import CTkAutoScrollFrame
 from lib.backup import export_backup, import_backup
 from lib.toast import ToastController, error_toast
