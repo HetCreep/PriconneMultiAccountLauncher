@@ -1,25 +1,31 @@
-# Dependabot — low-noise dependency maintenance.
-# Monthly + grouped + capped so it surfaces updates without flooding the repo.
+# Dependabot — FULL coverage, notify-only (no auto-merge; the maintainer reviews
+# every PR and merges manually). Grouped + capped so each ecosystem opens one PR.
 version: 2
 updates:
-  # GitHub Actions used in .github/workflows (release.yml, lock.yml, codeql.yml).
-  # Supply-chain hygiene — keeps actions/checkout, setup-python, etc. current
-  # and supports SHA-pinning per domain/distribution-security.md.
+  # GitHub Actions across all workflows (release / lock / codeql).
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
-    open-pull-requests-limit: 5
+      interval: "weekly"
+    open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
     groups:
       github-actions:
         patterns: ["*"]
 
-  # NOTE: no "pip" ecosystem on purpose.
-  #  - requirements.txt is intentionally unpinned (Dependabot has nothing to bump there).
-  #  - requirements.lock.txt is OWNED by the lock.yml workflow (regenerated from a clean
-  #    install); letting Dependabot also edit it causes ownership conflicts + drags in
-  #    runner-preinstalled packages (e.g. pipx).
-  #  - Python CVEs are still covered by Dependabot SECURITY updates (repo setting),
-  #    which open a PR only for an actual vulnerability — not routine version bumps.
+  # Python deps. Dependabot reads requirements.lock.txt (pinned) and opens PRs
+  # bumping it. NOTE: lock.yml also regenerates that file (full clean rebuild) —
+  # treat lock.yml as the manual "rebuild from scratch" tool and Dependabot as
+  # the incremental notifier. On conflict, prefer a lock.yml regen. The lock is
+  # produced in an isolated venv, so no runner-preinstalled noise (pipx) appears.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+    groups:
+      python:
+        patterns: ["*"]

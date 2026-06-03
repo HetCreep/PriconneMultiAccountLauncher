@@ -28,11 +28,14 @@ jobs:
       - name: Regenerate lock from requirements.txt
         shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          # Freeze the resolved runtime + transitive set. Drop the bootstrap trio
-          # (pip / setuptools / wheel) which are not project dependencies.
-          $frozen = pip freeze | Where-Object { $_ -and ($_ -notmatch '^(pip|setuptools|wheel)==') } | Sort-Object
+          # Freeze in an ISOLATED venv so runner-preinstalled packages (pipx,
+          # argcomplete, userpath, etc.) don't leak into the lock.
+          python -m venv .lockenv
+          $py = ".lockenv\Scripts\python.exe"
+          & $py -m pip install --upgrade pip --quiet
+          & $py -m pip install -r requirements.txt --quiet
+          # Drop the bootstrap trio (pip / setuptools / wheel) which aren't project deps.
+          $frozen = & $py -m pip freeze | Where-Object { $_ -and ($_ -notmatch '^(pip|setuptools|wheel)==') } | Sort-Object
           $frozen | Set-Content -Path requirements.lock.txt -Encoding utf8
           Write-Host "=== regenerated requirements.lock.txt ($($frozen.Count) packages) ==="
           Get-Content requirements.lock.txt
