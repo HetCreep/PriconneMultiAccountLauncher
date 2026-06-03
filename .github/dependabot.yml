@@ -1,0 +1,31 @@
+# Dependabot — low-noise dependency maintenance.
+# Monthly + grouped + capped so it surfaces security/version updates without
+# flooding the repo with PRs. (CVE security alerts are a separate repo setting.)
+version: 2
+updates:
+  # GitHub Actions used in .github/workflows (release.yml, lock.yml).
+  # Supply-chain hygiene — keeps actions/checkout, setup-python, etc. current
+  # and supports SHA-pinning per domain/distribution-security.md.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # Python runtime deps declared in requirements.txt.
+  # Note: requirements.lock.txt is regenerated via the lock.yml workflow, never hand-edited.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      python:
+        patterns: ["*"]
