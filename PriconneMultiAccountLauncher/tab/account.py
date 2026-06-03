@@ -9,7 +9,7 @@ import i18n
 logger = logging.getLogger(__name__)
 from component.component import CheckBoxComponent, EntryComponent, OptionMenuComponent, OptionMenuTupleComponent, PaddingComponent
 from component.tab_menu import TabMenuComponent
-from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkLabel, CTkScrollableFrame
+from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkLabel
 from component.auto_scroll_frame import CTkAutoScrollFrame
 from lib.DGPSessionV2 import DgpSessionV2
 from lib.toast import ToastController, error_toast

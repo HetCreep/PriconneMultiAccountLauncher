@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -33,8 +34,7 @@ class VariableBase:
                 os.fsync(f.fileno())
             os.replace(tmp, path)
         except Exception:
-            try:
+            # Best-effort cleanup of the partial tmp file; ignore if it's already gone.
+            with contextlib.suppress(OSError):
                 tmp.unlink()
-            except OSError:
-                pass
             raise

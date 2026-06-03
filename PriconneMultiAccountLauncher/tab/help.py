@@ -3,7 +3,7 @@ import webbrowser
 
 import customtkinter as ctk
 import i18n
-from customtkinter import CTkBaseClass, CTkButton, CTkScrollableFrame, CTkTextbox
+from customtkinter import CTkBaseClass, CTkButton, CTkTextbox
 from component.auto_scroll_frame import CTkAutoScrollFrame
 from lib.toast import ToastController
 from static.config import AssetsPathConfig, UrlConfig

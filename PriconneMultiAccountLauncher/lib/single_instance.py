@@ -8,8 +8,8 @@ per-role, not strictly app-wide.
 """
 
 import ctypes
+import ctypes.wintypes as wintypes
 import logging
-from ctypes import wintypes
 from typing import Optional
 
 logger = logging.getLogger(__name__)

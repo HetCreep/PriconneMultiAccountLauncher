@@ -7,6 +7,7 @@ Per [domain/telemetry-policy.md] and [domain/release-verification.md]:
 - Notify-only; never auto-downloads
 """
 
+import contextlib
 import json
 import logging
 import time
@@ -56,10 +57,8 @@ def _write_cache(tag_name: str) -> None:
         _os.replace(tmp, path)
     except OSError as exc:
         logger.warning("Failed to write update cache: %s", exc)
-        try:
+        with contextlib.suppress(OSError):
             tmp.unlink()
-        except OSError:
-            pass
 
 
 def get_latest_version(current_version: str, *, disabled: bool = False) -> str:
