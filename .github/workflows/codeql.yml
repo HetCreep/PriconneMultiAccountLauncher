@@ -27,7 +27,9 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
-          queries: security-and-quality
+          # security-only — code quality (unused imports, empty except, etc.) is
+          # a linter's job (ruff), not the security-scanning tab.
+          queries: security-extended
 
       # Python is interpreted — no build step needed; CodeQL analyzes the source directly.
       - name: Perform CodeQL Analysis
