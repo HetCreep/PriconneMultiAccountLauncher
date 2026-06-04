@@ -1,13 +1,10 @@
-This release is internal security hardening for the local logging and credential-storage paths. No user-facing behavior changes.
+This release stops the DMM Game Player window from popping up (and hanging blank) when the launcher refreshes an expired login through your browser.
 
 ## Highlights & Fixes
 
-- **Log redaction now covers all log outputs**:
-  - The credential-redaction filter is now attached to every log handler (file, console, debug window), not just the root logger. Previously, log lines emitted by submodules could reach the log file before redaction ran. Tokens, cookies, and hardware identifiers are now stripped on every output.
-- **Log-injection hardening**:
-  - Carriage-return / line-feed / tab characters in logged values are now encoded, so data from external sources can't forge fake log lines.
-- **DPAPI calls hardened**:
-  - Windows credential encrypt/decrypt now passes `CRYPTPROTECT_UI_FORBIDDEN`, ensuring no unexpected prompt can appear, and continues to use the current-user scope only (never machine scope).
+- **No more stray, blank DMM Game Player window during browser re-login**:
+  - When a shortcut launch needed to refresh an expired session via the browser, the DMM login "success" page would redirect to `dmmgameplayer://`, which opened the DMM Game Player client — often as a blank window you had to close by hand. The game itself launched fine; the window was just noise.
+  - The launcher now blocks the `dmmgameplayer://` external-protocol launch at the browser level (Chrome/Edge/Firefox), in addition to the existing page-stop guard. The success page can no longer pop the DMM client. Your game launch is unaffected.
 
 ## Build & Distribution
 

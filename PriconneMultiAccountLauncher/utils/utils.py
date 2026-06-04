@@ -71,18 +71,29 @@ def get_driver(path: Optional[Path]) -> webdriver.Chrome | webdriver.Edge | webd
     logger.info("Launching webdriver: browser=%s profile=%s", browser, path)
     absolute_path = path.absolute() if path is not None else None
     try:
+        # Block the dmmgameplayer:// external-protocol launch. The DMM login
+        # success page tries to redirect to dmmgameplayer://, which pops the DMM
+        # client mid-flow (we only need the OAuth code). window.stop() in
+        # login_driver races the redirect; blocking the scheme at the browser is
+        # the reliable guard. Chromium uses protocol_handler.excluded_schemes.
+        _block_proto = {"protocol_handler": {"excluded_schemes": {"dmmgameplayer": True}}}
         if browser == "Chrome":
             options = ChromeOptions()
+            options.add_experimental_option("prefs", _block_proto)
             if absolute_path is not None:
                 options.add_argument(f"--user-data-dir={absolute_path}")
             return webdriver.Chrome(options=options)
         if browser == "Edge":
             options = EdgeOptions()
+            options.add_experimental_option("prefs", _block_proto)
             if absolute_path is not None:
                 options.add_argument(f"--user-data-dir={absolute_path}")
             return webdriver.Edge(options=options)
         if browser == "Firefox":
             options = FirefoxOptions()
+            # Firefox: refuse the external protocol + don't prompt.
+            options.set_preference("network.protocol-handler.external.dmmgameplayer", False)
+            options.set_preference("network.protocol-handler.expose.dmmgameplayer", False)
             if absolute_path is not None:
                 options.add_argument("-profile")
                 options.add_argument(str(absolute_path))

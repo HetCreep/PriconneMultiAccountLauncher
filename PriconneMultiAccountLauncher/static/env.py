@@ -32,7 +32,7 @@ class _EnvMeta(type):
 
 
 class Env(Dump, metaclass=_EnvMeta):
-    VERSION = "v6.3.39"
+    VERSION = "v6.3.40"
 
     DEVELOP: bool = os.environ.get("ENV") == "DEVELOP"
     APPDATA: Path = Path(os.getenv("APPDATA", default=""))
