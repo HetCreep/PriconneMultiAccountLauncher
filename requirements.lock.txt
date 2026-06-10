@@ -17,12 +17,12 @@ pillow==12.2.0
 psutil==7.2.2
 pycparser==3.0
 pycryptodome==3.23.0
-pyinstaller-hooks-contrib==2026.5
+pyinstaller-hooks-contrib==2026.6
 pyinstaller==6.20.0
 pyreadline3==3.5.6
 PySocks==1.7.1
 pywin32-ctypes==0.2.3
-pywin32==311
+pywin32==312
 PyYAML==6.0.3
 requests==2.34.2
 selenium==4.44.0
