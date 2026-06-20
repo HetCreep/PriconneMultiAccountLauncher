@@ -1,10 +1,15 @@
-This release stops the DMM Game Player window from popping up (and hanging blank) when the launcher refreshes an expired login through your browser.
+This release fixes a "DMM API error (result_code=203)" that could appear when you create a shortcut, if the selected account's saved login had expired.
 
 ## Highlights & Fixes
 
-- **No more stray, blank DMM Game Player window during browser re-login**:
-  - When a shortcut launch needed to refresh an expired session via the browser, the DMM login "success" page would redirect to `dmmgameplayer://`, which opened the DMM Game Player client — often as a blank window you had to close by hand. The game itself launched fine; the window was just noise.
-  - The launcher now blocks the `dmmgameplayer://` external-protocol launch at the browser level (Chrome/Edge/Firefox), in addition to the existing page-stop guard. The success page can no longer pop the DMM client. Your game launch is unaffected.
+- **"Create Shortcut" no longer fails with `DMM API error (result_code=203)`**:
+  - Creating a shortcut used to fire a live DMM launch request just to read the game's title. That request fails with `result_code=203` ("refresh token is invalid") whenever the selected account's saved login token has expired — which commonly happens after the DMM Game Player client updates. The token is only refreshed when you actually launch the game, never during shortcut creation, so making a shortcut could error out (and pop a misleading message) even though launching the game still worked.
+  - Shortcut creation now reads the game icon from your local DMM install and names the shortcut after the filename you type — with no live login call. The error is gone, shortcut creation works even with an expired/offline session, and your saved token is left untouched. Token refresh still happens normally the moment you launch the game.
+  - As a side benefit, this removes a launch request that was being sent outside of an actual, user-initiated game launch.
+
+## Note
+
+- If clicking a shortcut shows a login/expired-session error when the game tries to start, that account's saved DMM login has expired. Re-import that account (Account tab → import) to refresh it, then launch again.
 
 ## Build & Distribution
 

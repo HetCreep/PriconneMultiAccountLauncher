@@ -38,7 +38,7 @@ from models.shortcut_data import ShortcutData
 from static.config import DataPathConfig
 from static.constant import Constant
 from static.env import Env
-from utils.utils import children_destroy, file_create, get_default_locale
+from utils.utils import children_destroy, file_create
 
 
 class ShortcutTab(CTkFrame):
@@ -199,35 +199,28 @@ class ShortcutBase(CTkAutoScrollFrame):
     def unity_command_line_args_callback(self):
         webbrowser.open(i18n.t("app.shortcut.unity_command_line_args_link"))
 
-    def get_game_info(self) -> tuple[str, Path, bool]:
-        game = [x for x in self.dgp_config["contents"] if x["productId"] == self.data.product_id.get()][0]
-        game_path = Path(game["detail"]["path"])
+    def get_game_info(self) -> tuple[str, Path | None, bool]:
+        """Resolve the shortcut's display name + game icon for "Create Shortcut".
 
-        if self.data.account_path.get() == Constant.ALWAYS_EXTRACT_FROM_DMM:
-            session = DgpSessionV2.read_dgp()
-        else:
-            path = DataPathConfig.ACCOUNT.joinpath(self.data.account_path.get()).with_suffix(".bytes")
-            session = DgpSessionV2.read_cookies(path)
-        response = session.lunch(self.data.product_id.get(), game["gameType"]).json()
+        Intentionally does NOT call the live DMM ``lunch()`` API. ``lunch()`` is a
+        stateful game-LAUNCH RPC (it writes a DRM token + play record server-side)
+        and requires a *fresh* access token, so invoking it just to fetch a title
+        made shortcut creation fail with ``result_code=203``
+        ("E210012: refresh token is invalid") whenever the per-account stored token
+        had expired. The token is only refreshed on the real launch path
+        (``launch.py._launch_after_swap``), never here — so creating a shortcut must
+        not depend on it. The game title is not present in the local ``dmmgame.cnf``
+        and is discarded anyway for non-cp932 locales, so the display name comes from
+        the user's chosen filename and the icon from the on-disk game executable
+        (``_resolve_local_game_icon`` already does that lookup safely). Dropping the
+        RPC also avoids firing a launch request outside an actual user-driven launch.
 
-        if response["result_code"] != 100:
-            err = response.get("error") or f"DMM API error (result_code={response.get('result_code')})"
-            raise Exception(err)
-
-        data = response["data"]
-        title = data["title"].replace("/", "").replace("\\", "")
-        title = title.replace(":", "").replace("*", "").replace("?", "")
-        title = title.replace('"', "").replace("<", "").replace(">", "").replace("|", "")
-
-        file = game_path.joinpath(data["exec_file_name"])
-
-        if get_default_locale()[1] == "cp932":
-            return (title, file, data["is_administrator"])
-
-        if all(ord(c) < 128 for c in title):
-            return (title, file, data["is_administrator"])
-
-        return (self.filename.get(), file, data["is_administrator"])
+        The third tuple element (formerly ``is_administrator`` from the API) is kept
+        only for the caller's unpacking shape; the caller discards it and elevation
+        is decided from the live response at launch time, not from the shortcut.
+        """
+        icon = self._resolve_local_game_icon()
+        return (self.filename.get(), icon, False)
 
 
 class ShortcutCreate(ShortcutBase):
