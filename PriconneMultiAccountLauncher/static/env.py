@@ -44,7 +44,3 @@ class Env(Dump, metaclass=_EnvMeta):
     DEFAULT_DMM_GAME_PLAYER_DATA_FOLDER: Path = APPDATA.joinpath("dmmgameplayer5")
 
     DMM_GAME_PLAYER_HIDDEN_FOLDER: Path = HOMEPATH.joinpath(".DMMGamePlayer")
-
-    SYSTEM_ROOT = Path(os.getenv("SYSTEMROOT", default=""))
-    SYSTEM32 = SYSTEM_ROOT.joinpath("System32")
-    SCHTASKS = SYSTEM32.joinpath("schtasks.exe")

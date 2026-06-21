@@ -3,8 +3,8 @@
 Top-level "Shortcut" tab with two sub-tabs (Create + Edit). Each shortcut
 launches the game executable directly via `GameLauncher` (argparse default
 `--type game`). Bypasses the DMM client UI — faster, slightly higher
-detection risk vs the DMM-relay pathway (which lives in the separate
-`Fast Launch GamePlayer` tab — see `tab/launcher_shortcut.py`).
+detection risk vs the DMM-relay pathway (the separate DMM Game Player
+launcher-shortcut flow).
 
 Shortcuts live under `DataPathConfig.SHORTCUT/`.
 """

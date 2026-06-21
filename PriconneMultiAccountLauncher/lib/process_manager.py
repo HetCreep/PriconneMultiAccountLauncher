@@ -1,4 +1,3 @@
-import contextlib
 import ctypes
 import logging
 import os
@@ -9,8 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import psutil
-import win32security
-from static.config import AssetsPathConfig, DataPathConfig, SchtasksConfig
+from static.config import AssetsPathConfig
 from static.env import Env
 
 logger = logging.getLogger(__name__)
@@ -97,73 +95,6 @@ class ProcessIdManager:
         if len(process) != 1:
             return None
         return process[0]
-
-
-import functools
-
-
-@functools.lru_cache(maxsize=1)
-def get_sid() -> str:
-    username = os.getlogin()
-    sid, _, _ = win32security.LookupAccountName("", username)
-    sidstr = win32security.ConvertSidToStringSid(sid)
-    return sidstr
-
-
-class Schtasks:
-    file: str
-    name: str
-
-    def __init__(self, args: str) -> None:
-        self.file = SchtasksConfig.FILE.format(os.getlogin(), args)
-        self.name = SchtasksConfig.NAME.format(self.file)
-        self.args = args
-
-    def check(self) -> bool:
-        xml_path = DataPathConfig.SCHTASKS.joinpath(self.file).with_suffix(".xml")
-        return not xml_path.exists()
-
-    def _xml_path(self) -> Path:
-        return DataPathConfig.SCHTASKS.joinpath(self.file).with_suffix(".xml")
-
-    def set(self) -> None:
-        """Write XML + register the scheduled task. Raises on UAC denial."""
-        with open(AssetsPathConfig.SCHTASKS, "r", encoding="utf-8") as f:
-            template = f.read()
-
-        if Env.DEVELOP:
-            command = Path(sys.executable)
-            args = [str(Path(sys.argv[0]).absolute()), self.args, "--type", "game"]
-        else:
-            command = Path(sys.argv[0])
-            args = [self.args, "--type", "game"]
-
-        from xml.sax.saxutils import escape
-
-        template = template.replace(r"{{UID}}", escape(self.file))
-        template = template.replace(r"{{SID}}", escape(get_sid()))
-        template = template.replace(r"{{COMMAND}}", escape(str(command.absolute())))
-        template = template.replace(r"{{ARGUMENTS}}", escape(" ".join(f"{x}" for x in args)))
-        template = template.replace(r"{{WORKING_DIRECTORY}}", escape(os.getcwd()))
-
-        xml_path = self._xml_path()
-        xml_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(xml_path, "w", encoding="utf-8") as f:
-            f.write(template)
-        create_args = [str(Env.SCHTASKS), "/create", "/xml", str(xml_path.absolute()), "/tn", self.name]
-
-        rc = ProcessManager.admin_run(create_args)
-        if rc <= 32:
-            # Roll back the XML side-effect so check() reflects reality.
-            with contextlib.suppress(OSError):
-                xml_path.unlink()
-            raise RuntimeError(f"Scheduled task registration failed (ShellExecute rc={rc}, likely UAC denied)")
-
-    def delete(self) -> None:
-        delete_args = [str(Env.SCHTASKS), "/delete", "/tn", self.name, "/f"]
-        ProcessManager.admin_run(delete_args)
-        with contextlib.suppress(OSError):
-            self._xml_path().unlink()
 
 
 class Shortcut:

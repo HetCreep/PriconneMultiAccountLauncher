@@ -16,7 +16,7 @@ from lib.DGPSessionV2 import DgpSessionV2
 from lib.log_sanitizer import install_redaction_filter
 from lib.single_instance import SingleInstanceLock
 from models.setting_data import AppConfig
-from static.config import AssetsPathConfig, DataPathConfig, SchtasksConfig, UrlConfig
+from static.config import AssetsPathConfig, DataPathConfig, UrlConfig
 from static.env import Env
 from static.loder import config_loder, config_migrate
 from tkinter_colored_logging_handlers.main import LoggingHandler
@@ -26,7 +26,6 @@ def loder(master: LanchLauncher):
     DataPathConfig.ACCOUNT.mkdir(exist_ok=True, parents=True)
     DataPathConfig.ACCOUNT_SHORTCUT.mkdir(exist_ok=True, parents=True)
     DataPathConfig.SHORTCUT.mkdir(exist_ok=True, parents=True)
-    DataPathConfig.SCHTASKS.mkdir(exist_ok=True, parents=True)
     DataPathConfig.BROWSER_PROFILE.mkdir(exist_ok=True, parents=True)
     DataPathConfig.BROWSER_CONFIG.mkdir(exist_ok=True, parents=True)
 
@@ -64,7 +63,6 @@ def loder(master: LanchLauncher):
     logging.debug(DataPathConfig.dump())
     logging.debug(AssetsPathConfig.dump())
     logging.debug(UrlConfig.dump())
-    logging.debug(SchtasksConfig.dump())
     logging.debug(sys.argv)
     logging.debug("==================================================")
     logging.debug("==================================================")

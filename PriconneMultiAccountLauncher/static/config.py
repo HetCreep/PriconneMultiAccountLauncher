@@ -11,7 +11,6 @@ class DataPathConfig(Dump):
     BROWSER_CONFIG = DATA.joinpath("browser_config")
     LOG = DATA.joinpath("log")
     APP_CONFIG = DATA.joinpath("config.json")
-    SCHTASKS = DATA.joinpath("schtasks")
     DEVICE = DATA.joinpath("device.json")
 
 
@@ -25,7 +24,6 @@ class AssetsPathConfig(Dump):
 
     ICON_MAIN = ICONS.joinpath("PriconneMultiAccountLauncher.ico")
 
-    SCHTASKS = TEMPLATE.joinpath("schtasks.xml")
     SHORTCUT = TEMPLATE.joinpath("shortcut.ps1")
 
 
@@ -35,8 +33,3 @@ class UrlConfig(Dump):
     RELEASE = "https://github.com/HetCreep/PriconneMultiAccountLauncher/releases/latest"
     DONATE = "https://github.com/HetCreep/PriconneMultiAccountLauncher"
     ISSUE = "https://github.com/HetCreep/PriconneMultiAccountLauncher/issues/new/choose"
-
-
-class SchtasksConfig(Dump):
-    FILE = "schtasks_v1_{0}_{1}"
-    NAME = "\\Microsoft\\Windows\\PriconneMultiAccountLauncher\\{0}"
