@@ -77,7 +77,7 @@ The following are not considered security issues for this project:
 - DMM account suspensions caused by use of multi-account tooling (see `LEGAL` / disclaimer in `README.md`)
 - Issues that require physical access to an unlocked Windows session under the user's own account (DPAPI is per-user; physical-access compromise is outside our threat model)
 - Vulnerabilities in optional browsers used for the import flow (Chrome, Edge, Firefox)
-- Sandboxie / Cameyo redirection effects on per-account isolation (mitigation: warning surfaced; full prevention requires bypassing the sandbox, which we won't do)
+- Sandboxie / Cameyo redirection effects on per-account isolation (running inside a sandbox is unsupported; the launcher does not detect or work around sandboxes, and bypassing a sandbox is out of scope)
 
 ## Related Documents
 

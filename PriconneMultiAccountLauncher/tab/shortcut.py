@@ -129,7 +129,7 @@ class ShortcutBase(CTkAutoScrollFrame):
         logger.info("Saved direct shortcut: %s", path)
 
     def save_handler(self, fn: Callable[[], None]):
-        pass
+        raise NotImplementedError("ShortcutBase subclasses must override save_handler")
 
     @error_toast
     def save_callback(self):

@@ -16,7 +16,7 @@ The launcher only initiates outbound HTTPS to:
 |---|---|---|
 | `*.dmm.com`, `*.dmmgame.com` (and related DMM domains) | DMM authentication / launch | User login or game launch |
 | Cygames game hosts | Game traffic from the launched game itself | User launches the game |
-| `api.github.com`, `github.com`, `objects.githubusercontent.com` | Update-check + release download | App start (cached 24h, opt-out in Settings) |
+| `api.github.com`, `github.com`, `objects.githubusercontent.com` | Update-check + release download | App start (cached 7 days, opt-out in Settings) |
 
 Anything else is a bug. There is no Discord RPC, no Sentry, no Bugsnag, no GA, no PostHog, no Mixpanel, no maintainer-owned "heartbeat" endpoint.
 
@@ -24,12 +24,12 @@ Anything else is a bug. There is no Discord RPC, no Sentry, no Bugsnag, no GA, n
 
 - **Windows DPAPI per-user encryption.** Account credentials in `.bytes` files are wrapped via `win32crypt.CryptProtectData`. The encryption key is held by your Windows user account — files copied off your machine cannot be decrypted by anyone else.
 - **AES-256 GCM** for the swap-in `authAccessTokenData.enc` blob, matching the official DMM Game Player format.
-- **Synthetic hardware identity** (`mac_address`, `hdd_serial`, `motherboard`, `cpu_id`, `machine_guid`) is generated once per account from a CSPRNG and stored DPAPI-encrypted alongside the token. Never randomized at runtime — randomization triggers DMM's multi-account anomaly detection.
+- **Synthetic hardware identity** (`mac_address`, `hdd_serial`, `motherboard`) is generated once per account from a CSPRNG and stored DPAPI-encrypted alongside the token. Never randomized at runtime — randomization triggers DMM's multi-account anomaly detection.
 - **Cross-machine backup/export** does not use DPAPI (which is bound to one Windows user). Instead, the exported bundle is encrypted with an AES-256-GCM key derived from a passphrase you choose (PBKDF2-HMAC-SHA256). Only someone with the passphrase can restore it; the file never leaves your machine unless you move it yourself.
 
 ## 4. Credential Masking in Logs
 
-- A redaction filter (`lib/log_sanitizer.py`) is attached to the root logger at startup.
+- A redaction filter (`lib/log_sanitizer.py`) is attached to the root logger and each of its handlers at startup (the handler-level attachment is what redacts records emitted by child loggers).
 - Filter rules: JWT tokens, `Bearer …` headers, long hex blobs, and key/value pairs whose key matches `token|cookie|password|secret|auth|session|hwid|mac_address|hdd_serial|motherboard|cpu_id|machine_guid|access_token|refresh_token|client_secret|api_key`.
 - Redacted output: `access_token=[REDACTED]` / `[REDACTED:token]`.
 - Toggle "Hide tokens on the log" in Settings is the user-facing knob.
@@ -40,9 +40,9 @@ Anything else is a bug. There is no Discord RPC, no Sentry, no Bugsnag, no GA, n
 - A baseline of your pre-launcher account state is captured on the first managed swap and restored after each launched game session closes (crash recovery restores it on the next launch if a run was force-killed).
 - Backups live under your local `data\` directory and never leave the machine.
 
-## 6. Sandbox Awareness
+## 6. Sandbox Behavior
 
-If the launcher detects it is running inside Sandboxie or Cameyo, it logs a warning. Inside a sandbox, registry/file writes are redirected and per-account isolation is best-effort.
+The launcher does not detect or specially handle sandboxes. If you run it inside Sandboxie, Cameyo, or a similar sandbox, registry/file writes are redirected by the sandbox, so per-account isolation is best-effort.
 
 ## 7. Update Check
 

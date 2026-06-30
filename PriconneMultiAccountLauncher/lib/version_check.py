@@ -1,4 +1,4 @@
-"""Update-check with 24h disk cache.
+"""Update-check with 7-day disk cache.
 
 Per [domain/telemetry-policy.md] and [domain/release-verification.md]:
 - Connects only to api.github.com

@@ -77,10 +77,6 @@ class DgpSessionUtils:
         return f"{oui}:{nic}"
 
 
-class DMMAlreadyRunningException(Exception):
-    pass
-
-
 class DgpSessionV2:
     DGP5_PATH = Path(os.environ["PROGRAMFILES"]).joinpath("DMMGamePlayer")
     DGP5_DATA_PATH = Path(os.environ["APPDATA"]).joinpath("dmmgameplayer5")
@@ -118,11 +114,8 @@ class DgpSessionV2:
     HARDWARE_LIST = API_DGP.format("/v5/hardwarelist")
     HARDWARE_REJECT = API_DGP.format("/v5/hardwarereject")
     USER_INFO = API_DGP.format("/v5/userinfo")
-    CHECK_ACCESS_TOKEN = API_DGP.format("/v5/auth/accesstoken/check")
     ACCESS_TOKEN = API_DGP.format("/v5/auth/accesstoken/issue")
     LOGIN_URL = API_DGP.format("/v5/auth/login/url")
-    SIGNED_URL = "https://cdn-gameplayer.games.dmm.com/product/*"
-    WEB_LOGIN_URL = "https://accounts.dmm.com/service/oauth/=/path="
     PROXY: dict[str, str] = {}
 
     actauth: dict[str, str]
@@ -259,11 +252,6 @@ class DgpSessionV2:
     def get(self, url: str, params: Any = None, **kwargs: Any) -> requests.Response:
         logger.debug("GET %s", url)
         res = self.session.get(url, headers=self.HEADERS, params=params, **kwargs)
-        return self._post_request_log(res)
-
-    def post(self, url: str, json: Any = None, **kwargs: Any) -> requests.Response:
-        logger.debug("POST %s", url)
-        res = self.session.post(url, headers=self.HEADERS, json=json, **kwargs)
         return self._post_request_log(res)
 
     def get_dgp(self, url: str, params: Any = None, **kwargs: Any) -> requests.Response:

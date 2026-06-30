@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from tkinter import BooleanVar, StringVar
-from typing import Callable, Optional, TypeVar
+from typing import Callable, Optional
 
 import customtkinter as ctk
 import i18n
@@ -17,8 +17,6 @@ from models.shortcut_data import BrowserConfigData
 from static.config import DataPathConfig
 from static.constant import Constant
 from utils.utils import children_destroy, file_create, get_driver, login_driver
-
-T = TypeVar("T")
 
 
 # ===== Account Sub Menu =====

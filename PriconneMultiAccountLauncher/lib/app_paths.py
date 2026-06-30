@@ -2,8 +2,7 @@
 
 Avoids the failure mode where `Path("data")` resolves against the current
 working directory — which is fragile when the launcher is invoked from a
-shortcut, a scheduled task, or via the file-association handler from a
-different folder.
+shortcut or via the file-association handler from a different folder.
 
 In frozen PyInstaller builds: base = directory containing the bundled .exe.
 In dev (source run via `python PriconneMultiAccountLauncher/...`): base =
