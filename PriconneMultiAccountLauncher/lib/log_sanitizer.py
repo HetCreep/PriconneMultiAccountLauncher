@@ -68,7 +68,10 @@ class RedactionFilter(logging.Filter):
             redacted_msg = redact(msg)
             redacted_args = self._redact_args(record.args) if record.args else record.args
             redacted_exc_text = self._redact_exc_text(record)
-        except Exception:  # noqa: BLE001 - fail closed, see docstring
+        # Deliberately blind: ANY failure here must fail closed, see the docstring.
+        # (No `# noqa: BLE001` — the rule is globally ignored in pyproject for now,
+        # which makes the directive itself dead. Restore it when BLE001 comes back on.)
+        except Exception:
             record.msg = _REDACTION_FAILED
             record.args = None
             record.exc_info = None

@@ -37,9 +37,12 @@ ignore = [
     "LOG015",  # 17 · `logging.debug()` on the ROOT logger — the startup dump of
                #      config/device/env objects, audit finding F81. Fixed by using a
                #      module logger and not dumping whole objects.
-    "BLE001",  # 12 · blind `except Exception`. Some are deliberate and carry a
-               #      reasoned `# noqa: BLE001`; the rest are the silent-failure
-               #      class from the audit and need narrowing.
+    "BLE001",  # 12 · blind `except Exception`. Some are deliberate; the rest are the
+               #      silent-failure class from the audit and need narrowing.
+               #      Side effect to remember: ignoring a rule makes its existing
+               #      `# noqa: BLE001` directives dead, and RUF100 then flags them.
+               #      Those three were converted to plain comments — restore the
+               #      directives in the same change that removes this entry.
     "TRY201",  # 2  · `raise` instead of `raise e`
     "TRY203",  # 1  · handler that immediately re-raises
     "TRY401",  # 1  · redundant exception object in logging.exception()

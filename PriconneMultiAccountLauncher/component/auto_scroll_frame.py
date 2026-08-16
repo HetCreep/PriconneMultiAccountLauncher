@@ -27,7 +27,7 @@ class CTkAutoScrollFrame(CTkScrollableFrame):
         self._auto_scroll_grid_info: dict | None = None
         try:
             self._auto_scroll_grid_info = dict(self._scrollbar.grid_info())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug("AutoScroll: cannot read scrollbar grid_info: %s", exc)
 
         self.bind("<Configure>", self._auto_scroll_reeval, add="+")
@@ -51,5 +51,5 @@ class CTkAutoScrollFrame(CTkScrollableFrame):
                     self._scrollbar.grid(**kw)
                 else:
                     self._scrollbar.grid()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug("AutoScroll: reeval failed (cosmetic): %s", exc)
