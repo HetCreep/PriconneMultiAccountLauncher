@@ -338,7 +338,7 @@ def _baseline_exists() -> bool:
     return bdir.joinpath("registry.json").exists()
 
 
-def snapshot_baseline_if_missing() -> None:
+def snapshot_baseline_if_missing() -> bool:
     """Capture the current on-disk game state as the baseline if not already saved.
 
     Called from `swap_account_data` on the FIRST managed swap. The baseline
@@ -346,14 +346,20 @@ def snapshot_baseline_if_missing() -> None:
     `manifest.db` + the Cygames registry subkey before any per-account swap
     occurred. `restore_to_baseline` (post-game-exit) returns the machine to
     this state so the user's primary account remains usable outside the launcher.
+
+    Returns False only when a baseline was needed and could not be written. The
+    caller MUST NOT continue: this is the one snapshot of the user's pre-launcher
+    account, and the swap that follows overwrites exactly what it would have held.
+    Without it, restore_to_baseline has nothing to return to and the machine stays
+    bound to whichever account was last swapped in — permanently.
     """
     if _baseline_exists():
-        return
+        return True
     if not verify_game_data_present():
         logger.info("Skip baseline snapshot — no game data on disk yet.")
-        return
+        return True
     logger.info("Snapshotting baseline game state before first account swap.")
-    backup_account(BASELINE_NAME)
+    return backup_account(BASELINE_NAME)
 
 
 def _count_active_launch_processes() -> int:
@@ -496,8 +502,14 @@ def swap_account_data(new_account_name: str) -> None:
 
 def _swap_account_data_locked(new_account_name: str) -> None:
     # First managed swap ever: capture the user's pre-launcher state so
-    # restore_to_baseline (post-game-exit) has somewhere to return to.
-    snapshot_baseline_if_missing()
+    # restore_to_baseline (post-game-exit) has somewhere to return to. Same rule as
+    # the per-account backup below — if the snapshot cannot be written, the swap
+    # must not proceed to overwrite the very state it was supposed to preserve.
+    if not snapshot_baseline_if_missing():
+        raise AccountSwapAborted(
+            "Could not save your current account state as the restore point before the first switch. "
+            "Nothing was changed. Check that the launcher can write to its data folder, then try again."
+        )
 
     last_active = get_last_active_account()
 
