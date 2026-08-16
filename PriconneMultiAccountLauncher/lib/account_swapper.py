@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from lib.game_paths import get_registry_subkey, verify_game_data_present
+from lib.single_instance import registry_swap_lock
 from static.config import DataPathConfig
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,15 @@ _ALWAYS_EXTRACT = "always_extract_from_dmm"
 # machine to that state (per user's design: B/C are temporary slots layered over
 # the persistent A baseline).
 BASELINE_NAME = "_baseline_"
+
+
+class AccountSwapAborted(Exception):
+    """Raised when a swap is refused because completing it would lose account state.
+
+    Callers surface this to the user and do NOT launch the game: the machine is
+    still bound to whatever account it was bound to before, which is the safe
+    outcome. See account-lifecycle.md integrity invariants.
+    """
 
 _REG_TYPE_MAP: dict[int, str] = {
     winreg.REG_SZ: "REG_SZ",
@@ -100,7 +110,10 @@ def _walk_key(key) -> dict:
 
 def _delete_subtree(root: int, subkey: str) -> None:
     try:
-        with winreg.OpenKey(root, subkey, 0, winreg.KEY_ALL_ACCESS) as key:
+        # KEY_READ is enough to enumerate children; DeleteKey below opens with the
+        # DELETE right it needs on its own. KEY_ALL_ACCESS here was more than the
+        # operation requires (native-windows-api.md least privilege).
+        with winreg.OpenKey(root, subkey, 0, winreg.KEY_READ) as key:
             i = 0
             children: list[str] = []
             while True:
@@ -119,7 +132,9 @@ def _delete_subtree(root: int, subkey: str) -> None:
 
 
 def _import_subtree(root: int, subkey: str, tree: dict) -> None:
-    with winreg.CreateKeyEx(root, subkey, 0, winreg.KEY_ALL_ACCESS) as key:
+    # KEY_WRITE covers CreateKeyEx + SetValueEx; KEY_ALL_ACCESS also grants delete
+    # and ownership rights this function never uses.
+    with winreg.CreateKeyEx(root, subkey, 0, winreg.KEY_WRITE) as key:
         for name, entry in tree.get("values", {}).items():
             vtype = _REG_TYPE_REV.get(entry["type"], winreg.REG_SZ)
             winreg.SetValueEx(key, name, 0, vtype, _decode_value(entry["data"], vtype))
@@ -161,7 +176,7 @@ def set_last_active_account(account_name: str) -> None:
         logger.error("Failed to write last active account file: %s", exc)
 
 
-def backup_account(account_name: str) -> None:
+def backup_account(account_name: str) -> bool:
     """Snapshot an account's binding into its backup slot.
 
     Account identity lives ENTIRELY in the obfuscated Cygames registry subtree
@@ -170,26 +185,47 @@ def backup_account(account_name: str) -> None:
     table of 79k asset hash→version rows, account-agnostic) — swapping them
     per account caused multi-GB re-downloads and black-texture renders.
     So this only snapshots the registry.
+
+    Returns True when the account's state is safely captured — either written to
+    disk, or genuinely absent so there is nothing to lose. Returns False when a
+    snapshot existed but could not be persisted. Callers MUST NOT overwrite the
+    live registry on a False: the previous account's binding would be gone with no
+    snapshot to recover it from (account-lifecycle.md integrity invariants).
     """
     if not _is_real_account(account_name):
-        return
+        return True
 
     registry_subkey = get_registry_subkey()
     logger.info("Backing up session data (registry) for account: %s", account_name)
     backup_dir = BACKUP_BASE_DIR.joinpath(account_name)
-    backup_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        backup_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        logger.error("Cannot create backup dir %s: %s", backup_dir, exc)
+        return False
 
     snapshot = _export_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
     if snapshot is None:
-        logger.info("Registry subtree absent (%s); skipping registry backup for %s", registry_subkey, account_name)
-        return
+        logger.info("Registry subtree absent (%s); nothing to back up for %s", registry_subkey, account_name)
+        return True
 
+    # Write to a temp file and rename, so an interrupted write cannot leave a
+    # truncated registry.json that later parses as an empty binding.
+    target = backup_dir.joinpath("registry.json")
+    tmp = backup_dir.joinpath("registry.json.tmp")
     try:
-        with open(backup_dir.joinpath("registry.json"), "w", encoding="utf-8") as f:
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(snapshot, f, ensure_ascii=False, indent=2)
+        tmp.replace(target)
         logger.info("Backed up registry for %s", account_name)
-    except OSError as exc:
-        logger.error("Failed to write registry backup: %s", exc)
+        return True
+    except (OSError, TypeError, ValueError) as exc:
+        logger.error("Failed to write registry backup for %s: %s", account_name, exc)
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return False
 
 
 def _clear_account_binding_for_fresh_start(account_name: str) -> None:
@@ -222,14 +258,18 @@ def _clear_account_binding_for_fresh_start(account_name: str) -> None:
     _delete_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
 
 
-def restore_account(account_name: str) -> None:
+def restore_account(account_name: str) -> bool:
     """Apply an account's saved registry binding to the live registry.
 
     Registry-only — see `backup_account` docstring. `manifest.db` and the
     LocalLow asset caches are shared and never touched here.
+
+    Returns True if the live binding now reflects `account_name`. Returns False if
+    the restore failed; on failure the pre-swap binding is rolled back where a
+    pre-image existed, so the machine is never left bound to nothing.
     """
     if not _is_real_account(account_name):
-        return
+        return True
 
     registry_subkey = get_registry_subkey()
 
@@ -243,21 +283,40 @@ def restore_account(account_name: str) -> None:
         # error). Force a fresh-start clear so the game does a clean login.
         logger.info("No registry backup for %s — clearing live registry for fresh first launch", account_name)
         _clear_account_binding_for_fresh_start(account_name)
-        return
+        # Intended end state, not a failure: a never-launched account must start
+        # from a clean binding rather than inherit the previous account's.
+        return True
 
     try:
         with open(backup_reg, "r", encoding="utf-8") as f:
             snapshot = json.load(f)
     except (OSError, json.JSONDecodeError) as exc:
         logger.error("Failed to read registry backup: %s", exc)
-        return
+        return False
+
+    # Transactional restore. This is delete-then-import over the LIVE subtree, so a
+    # failure part-way used to leave NEITHER account's binding present — the machine
+    # ends up bound to nothing and the user's previous account has to re-login.
+    # Capture the pre-image first and put it back if the import does not complete.
+    pre_image = _export_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
 
     _delete_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
     try:
         _import_subtree(winreg.HKEY_CURRENT_USER, registry_subkey, snapshot)
         logger.info("Restored registry for %s", account_name)
-    except OSError as exc:
-        logger.error("Failed to import registry: %s", exc)
+        return True
+    except (OSError, KeyError, TypeError, ValueError) as exc:
+        logger.error("Failed to import registry for %s: %s", account_name, exc)
+        if pre_image is None:
+            logger.error("No pre-image to roll back to; live binding left cleared.")
+            return False
+        try:
+            _delete_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
+            _import_subtree(winreg.HKEY_CURRENT_USER, registry_subkey, pre_image)
+            logger.warning("Rolled the live registry back to its pre-swap state.")
+        except (OSError, KeyError, TypeError, ValueError):
+            logger.exception("ROLLBACK FAILED — the live Cygames binding may be inconsistent.")
+        return False
 
 
 def _baseline_exists() -> bool:
@@ -379,17 +438,35 @@ def restore_to_baseline() -> None:
         logger.info("Skip baseline restore — no game data on disk.")
         return
 
+    # Same shared subtree as the swap, so the same lock. Not nested inside
+    # swap_account_data — launch.py calls this from a finally after the swap has
+    # already returned — and a Win32 mutex is re-entrant per thread regardless.
+    with registry_swap_lock():
+        _restore_to_baseline_locked()
+
+
+def _restore_to_baseline_locked() -> None:
     last_active = get_last_active_account()
     if last_active and _is_real_account(last_active):
         logger.info("Game closed — capturing post-session state for '%s'", last_active)
-        backup_account(last_active)
+        if not backup_account(last_active):
+            # Unlike the pre-swap backup this does not abort: the baseline restore
+            # below still has to run or the DMM client is left bound to the wrong
+            # account. But the session's progress binding was not saved, so say so
+            # loudly instead of continuing silently.
+            logger.error(
+                "Post-session snapshot for '%s' FAILED — this session's binding was not saved. "
+                "Restoring baseline anyway so the DMM client is usable.",
+                last_active,
+            )
 
     if not _baseline_exists():
         logger.warning("Cannot restore baseline — no baseline snapshot exists. Leaving current state in place.")
         return
 
     logger.info("Restoring baseline game state.")
-    restore_account(BASELINE_NAME)
+    if not restore_account(BASELINE_NAME):
+        logger.error("Baseline restore FAILED — the DMM client may report an account-mismatch until the next successful swap.")
 
     # Baseline = "no per-account slot is live". Clear the marker so the next
     # swap_account_data call enters the cold-start path cleanly.
@@ -410,6 +487,14 @@ def swap_account_data(new_account_name: str) -> None:
         set_last_active_account(new_account_name)
         return
 
+    # Everything below mutates the single shared Cygames subtree. Two shortcut
+    # launches for different accounts previously ran this concurrently and could
+    # interleave, writing one account's binding into another's slot.
+    with registry_swap_lock():
+        _swap_account_data_locked(new_account_name)
+
+
+def _swap_account_data_locked(new_account_name: str) -> None:
     # First managed swap ever: capture the user's pre-launcher state so
     # restore_to_baseline (post-game-exit) has somewhere to return to.
     snapshot_baseline_if_missing()
@@ -418,8 +503,20 @@ def swap_account_data(new_account_name: str) -> None:
 
     if last_active and last_active != new_account_name:
         logger.info("Swapping account: backing up '%s' first", last_active)
-        backup_account(last_active)
+        if not backup_account(last_active):
+            # Abort rather than overwrite. Proceeding here destroys the previous
+            # account's binding with no snapshot to recover it from, and the user
+            # only finds out when that account next fails to log in.
+            raise AccountSwapAborted(
+                f"Could not back up the current account ('{last_active}') before switching. "
+                f"Nothing was changed — the machine is still bound to that account. "
+                f"Check that the launcher can write to its data folder, then try again."
+            )
 
     logger.info("Restoring account data for '%s'", new_account_name)
-    restore_account(new_account_name)
+    if not restore_account(new_account_name):
+        raise AccountSwapAborted(
+            f"Could not apply the saved state for '{new_account_name}'. "
+            f"The previous binding was rolled back where possible — see the log for detail."
+        )
     set_last_active_account(new_account_name)
