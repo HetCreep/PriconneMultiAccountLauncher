@@ -7,6 +7,7 @@ from typing import Callable, Union
 import customtkinter as ctk
 import i18n
 from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkLabel, CTkTextbox, CTkToplevel
+from lib.log_sanitizer import redact_secrets
 from static.config import UrlConfig
 from utils.utils import get_isinstance
 
@@ -149,11 +150,14 @@ class ErrorFrame(CTkFrame):
         self.trace = trace
 
     def create(self):
-        CTkLabel(self, text=self.text).pack(pady=10)
+        # Redact at the widget boundary: this pane has a copy-to-clipboard button next
+        # to a button that opens the public issue tracker, so anything rendered here is
+        # one click away from a public paste. See domain/log-sanitization.md.
+        CTkLabel(self, text=redact_secrets(self.text)).pack(pady=10)
 
         box = CTkTextbox(self, height=30)
         box.pack(fill=ctk.BOTH, padx=10, pady=(0, 10), expand=True)
-        box.insert("0.0", self.trace)
+        box.insert("0.0", redact_secrets(self.trace))
 
         frame = CTkFrame(self, fg_color="transparent")
         frame.pack(fill=ctk.BOTH, padx=10, pady=(0, 10))

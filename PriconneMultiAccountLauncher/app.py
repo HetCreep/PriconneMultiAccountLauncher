@@ -6,6 +6,7 @@ import customtkinter as ctk
 import i18n
 from component.tab_menu import TabMenuComponent
 from customtkinter import CTk, CTkFrame, CTkLabel
+from lib.log_sanitizer import redact_secrets
 from static.config import AssetsPathConfig
 
 logger = logging.getLogger(__name__)
@@ -105,7 +106,9 @@ class App(CTk):
         ).pack(anchor=ctk.W, pady=(0, 5))
         box = CTkTextbox(scroll, height=400, wrap="word")
         box.pack(fill=ctk.BOTH, expand=True)
-        box.insert("0.0", tb)
+        # Redact at the widget boundary — a rendered traceback is one copy away from a
+        # public issue. See domain/log-sanitization.md.
+        box.insert("0.0", redact_secrets(tb))
 
     def home_callback(self, master: CTkFrame):
         self._render_tab(master, HomeTab, "Home")

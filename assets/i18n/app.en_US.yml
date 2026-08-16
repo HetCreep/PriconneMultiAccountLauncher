@@ -183,7 +183,6 @@ en_US:
     reset_to_auto: "Reset to Auto"
     debug_window: Show Debug Window
     output_logfile: Log to File
-    mask_token: Hide tokens on the log
     disable_update_check: Disable update check (no calls to GitHub)
 
     device_detail: |-

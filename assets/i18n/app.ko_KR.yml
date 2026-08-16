@@ -184,7 +184,6 @@ ko_KR:
     reset_to_auto: "자동으로 재설정"
     debug_window: 디버그 창 표시
     output_logfile: 파일에 로그 기록
-    mask_token: 로그에서 토큰 숨기기
     disable_update_check: 업데이트 확인 비활성화 (GitHub 호출 없음)
 
     device_detail: |-

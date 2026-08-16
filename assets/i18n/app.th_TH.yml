@@ -184,7 +184,6 @@ th_TH:
     reset_to_auto: "รีเซ็ตเป็นอัตโนมัติ"
     debug_window: แสดง Debug Window
     output_logfile: บันทึก log ลงไฟล์
-    mask_token: ซ่อน token ใน log
     disable_update_check: ปิดการตรวจอัปเดต (ไม่เชื่อม GitHub)
 
     device_detail: |-

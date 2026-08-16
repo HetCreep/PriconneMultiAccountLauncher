@@ -184,7 +184,6 @@ fr_FR:
     reset_to_auto: "Réinitialiser à Auto"
     debug_window: Afficher la fenêtre de débogage
     output_logfile: Journaliser dans un fichier
-    mask_token: Masquer les jetons dans le journal
     disable_update_check: Désactiver la vérification des mises à jour (aucun appel à GitHub)
 
     device_detail: |-

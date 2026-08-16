@@ -184,7 +184,6 @@ de_DE:
     reset_to_auto: "Auf Auto zurücksetzen"
     debug_window: Debug-Fenster anzeigen
     output_logfile: In Datei protokollieren
-    mask_token: Tokens im Protokoll ausblenden
     disable_update_check: Update-Prüfung deaktivieren (keine GitHub-Aufrufe)
 
     device_detail: |-

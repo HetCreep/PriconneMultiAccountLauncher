@@ -184,7 +184,6 @@ zh_CN:
     reset_to_auto: "重置为自动"
     debug_window: 显示调试窗口
     output_logfile: 输出日志到文件
-    mask_token: 隐藏日志中的令牌
     disable_update_check: 禁用更新检查(不连接 GitHub)
 
     device_detail: |-

@@ -41,8 +41,12 @@ def loder(master: LanchLauncher):
         handlers.append(handler)
 
     if AppConfig.DATA.debug_window.get() and not any([isinstance(x, LoggingHandler) for x in logging.getLogger().handlers]):
-        handle = LoggingHandlerMask if AppConfig.DATA.mask_token.get() else LoggingHandler
-        tk_handler = handle(TkinkerLogger(master).create().box, scheme=StyleScheme)
+        # Masking is unconditional. install_redaction_filter() below already attaches
+        # RedactionFilter to this handler, so the window is redacted either way; the
+        # mask handler is a second pass. It used to be switchable via a "mask token"
+        # checkbox, which implied tokens are shown when unchecked. Redaction has no
+        # off switch — see domain/log-sanitization.md.
+        tk_handler = LoggingHandlerMask(TkinkerLogger(master).create().box, scheme=StyleScheme)
         tk_handler.setFormatter(ColoredFormatter("[%(levelname)s] [%(asctime)s] %(message)s"))
         handlers.append(tk_handler)
 

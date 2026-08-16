@@ -184,7 +184,6 @@ vi_VN:
     reset_to_auto: "Đặt lại Auto"
     debug_window: Hiển thị cửa sổ Debug
     output_logfile: Ghi log ra tệp
-    mask_token: Ẩn token trong log
     disable_update_check: Tắt kiểm tra cập nhật (không gọi GitHub)
 
     device_detail: |-

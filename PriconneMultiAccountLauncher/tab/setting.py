@@ -178,7 +178,8 @@ class SettingAdvancedTab(CTkAutoScrollFrame, _SettingSaveMixin):
         PaddingComponent(self, height=10).create()
         CheckBoxComponent(self, text=i18n.t("app.setting.debug_window"), variable=self.data.debug_window).create()
         CheckBoxComponent(self, text=i18n.t("app.setting.output_logfile"), variable=self.data.output_logfile).create()
-        CheckBoxComponent(self, text=i18n.t("app.setting.mask_token"), variable=self.data.mask_token).create()
+        # No "mask token" checkbox: redaction is unconditional and has no off switch.
+        # The field stays in setting_data for config backward-compatibility only.
 
         PaddingComponent(self, height=10).create()
         CTkButton(self, text=i18n.t("app.setting.save"), command=self.save_callback).pack(fill=ctk.X, pady=10)

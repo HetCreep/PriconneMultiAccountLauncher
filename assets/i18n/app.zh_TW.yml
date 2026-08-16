@@ -184,7 +184,6 @@ zh_TW:
     reset_to_auto: "重設為自動"
     debug_window: 顯示偵錯視窗
     output_logfile: 輸出記錄到檔案
-    mask_token: 隱藏記錄中的權杖
     disable_update_check: 停用更新檢查(不連線 GitHub)
 
     device_detail: |-

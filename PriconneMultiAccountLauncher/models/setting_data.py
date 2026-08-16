@@ -22,6 +22,10 @@ class SettingData(VariableBase):
     window_scaling: DoubleVar = field(default_factory=lambda: DoubleVar(value=1.0))
     debug_window: BooleanVar = field(default_factory=lambda: BooleanVar(value=False))
     output_logfile: BooleanVar = field(default_factory=lambda: BooleanVar(value=False))
+    # Retained for config.json backward compatibility only — nothing reads it.
+    # Log redaction is unconditional and has no off switch (domain/log-sanitization.md),
+    # so the setting and its UI checkbox were removed. Do not delete this field in a
+    # dead-code sweep: existing config files still carry the key.
     mask_token: BooleanVar = field(default_factory=lambda: BooleanVar(value=True))
     disable_update_check: BooleanVar = field(default_factory=lambda: BooleanVar(value=False))
 
