@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "PriconneMultiAccountLauncher"))
 
-from lib import log_sanitizer  # noqa: E402
-from lib.log_sanitizer import RedactionFilter, redact, redact_secrets  # noqa: E402
+from lib import log_sanitizer
+from lib.log_sanitizer import RedactionFilter, redact, redact_secrets
 
 JWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.abc-_123"
 LONG_HEX = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"

@@ -29,7 +29,7 @@ class TabMenuComponent:
     def add(self, text: str, callback: Callable):
         row = self.row
         text_color = CTkm.theme["MenuComponent"]["text_color"]
-        command = lambda: self.callback_wrapper(callback, row=row)  # noqa E731
+        command = lambda: self.callback_wrapper(callback, row=row)
 
         btn = CTkButton(self.tab_master, text=text, fg_color="transparent", text_color=text_color, command=command)
         btn.pack(pady=2, padx=4)
