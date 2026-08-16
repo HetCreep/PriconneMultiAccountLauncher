@@ -1,1 +1,12 @@
-blank_issues_enabled: true
+# SECURITY.md tells users not to open a public issue for a vulnerability.
+# This file has to agree with it, or the easiest path stays the public tracker.
+blank_issues_enabled: false
+
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/HetCreep/PriconneMultiAccountLauncher/security/advisories/new
+    about: Do NOT open a public issue. Report privately through GitHub Security Advisories — see SECURITY.md for scope and response times.
+
+  - name: My DMM account was suspended, or login/launch broke
+    url: https://github.com/HetCreep/PriconneMultiAccountLauncher/issues/new?template=breakage-report.yml
+    about: Use the breakage report. This is the only signal the project gets that its account-isolation assumptions stopped holding.

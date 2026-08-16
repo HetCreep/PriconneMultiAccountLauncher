@@ -1,0 +1,65 @@
+name: CI
+
+# The gate that runs on ordinary changes. release.yml is tag-triggered and cannot
+# catch anything before a tag exists; codeql.yml covers security patterns only.
+# Sequencing and the rules for what belongs here: .claude/rules/ecc/common/ci-gates.md
+#
+# Branch protection is deliberately NOT enabled on these checks yet. Turn it on
+# once they have been green for a while — a required check that goes red on day
+# one gets switched off and never comes back.
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    # Windows, because that is what the shipped artifact targets. A check that only
+    # runs on ubuntu is not testing what users get.
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dev tools
+        shell: pwsh
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        shell: pwsh
+        run: ruff check .
+
+      - name: Format check
+        shell: pwsh
+        # Reports formatting drift without rewriting anything. If this is noisy on
+        # first run, format the tree once in a dedicated commit rather than deleting
+        # the step.
+        run: ruff format --check .
+
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Redaction property test
+        shell: pwsh
+        # No dependency install: this test imports only lib/log_sanitizer, which is
+        # stdlib-only, and runs without pytest by design. It guards the invariant that
+        # credentials never reach a log.
+        run: python test/property/test_log_sanitizer.py

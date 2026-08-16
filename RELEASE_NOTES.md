@@ -14,7 +14,16 @@ This release fixes a "DMM API error (result_code=203)" that could appear when yo
 ## Build & Distribution
 
 - Builds run entirely in GitHub Actions on every version tag. Local builds are not distributed.
-- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM. Older releases keep only their source code.
+- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM.
+- Older releases keep their source code **and their `SHA256SUMS.txt` / SBOM** — only the installable binaries are removed, so a copy you downloaded earlier can still be verified.
+
+## Security
+
+- No security fixes in this release. Report vulnerabilities privately via [GitHub Security Advisories](https://github.com/HetCreep/PriconneMultiAccountLauncher/security/advisories/new), not the public issue tracker — see `SECURITY.md`.
+
+## Known Issues
+
+- Binaries are not code-signed; SmartScreen will warn about an unknown publisher. Verify the SHA-256 in the Verification section below before running.
 
 ## Compatibility
 

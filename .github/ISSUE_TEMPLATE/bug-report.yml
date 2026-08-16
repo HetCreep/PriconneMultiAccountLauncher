@@ -9,6 +9,15 @@ body:
         Before reporting a bug, please check [Issues](https://github.com/HetCreep/PriconneMultiAccountLauncher/issues) to see if a similar bug has already been reported. If there is a similar bug and you can provide additional information, please add a comment.
 
   - type: input
+    id: launcher-version
+    attributes:
+      label: Launcher version
+      description: Shown in the window title and in the first lines of the log file. Without it a report usually cannot be acted on.
+      placeholder: "Example: v6.3.41"
+    validations:
+      required: true
+
+  - type: input
     id: os
     attributes:
       label: OS
@@ -44,7 +53,10 @@ body:
     id: log
     attributes:
       label: Log
-      description: Paste the logs displayed in the debug window here. If there are personal information such as tokens, please redact them.
+      description: |
+        Paste the logs from the debug window, or from `data\log\` next to the executable.
+        The launcher redacts tokens and hardware identifiers before writing them, but skim the text
+        before pasting — you are the last check.
       render: Shell
     validations:
       required: false

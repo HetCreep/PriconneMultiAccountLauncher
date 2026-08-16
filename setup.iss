@@ -32,7 +32,12 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 VersionInfoVersion={#MyAppVersion}
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-DefaultDirName={userappdata}\{#MyAppName}
+; {localappdata}\Programs is the per-user convention for an installed application.
+; {userappdata} is Roaming, which on a domain profile syncs the whole install —
+; including data\ , which lives beside the exe — to a server on every logon.
+; Existing installs are matched by AppId and upgrade in place, so this only
+; changes where NEW installs land.
+DefaultDirName={localappdata}\Programs\{#MyAppName}
 ; Allow the user to change the install location. Default stays at
 ; %APPDATA%\PriconneMultiAccountLauncher; power users can pick D:\ or any other path.
 DisableDirPage=auto

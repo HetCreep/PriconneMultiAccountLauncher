@@ -20,8 +20,17 @@ A secure, ultra-fast, and flawless multi-account switcher and launcher for the P
 ## 💾 Installation
 
 1.  Download the latest installer or portable zip from the [Releases](https://github.com/HetCreep/PriconneMultiAccountLauncher/releases) page only. Release artifacts are built by GitHub Actions on a version tag, not from a maintainer's machine.
-2.  Each release attaches `SHA256SUMS.txt` and an SBOM (`sbom.cdx.json`) so you can verify the download before running it.
+2.  **Verify the download before running it.** Each release attaches `SHA256SUMS.txt` and an SBOM (`sbom.cdx.json`). In PowerShell, from the folder you downloaded into:
+
+    ```powershell
+    Get-FileHash -Algorithm SHA256 .\PriconneMultiAccountLauncher-v<version>-setup.exe
+    ```
+
+    Compare the result with the matching line in `SHA256SUMS.txt` (also printed in the release notes). **If they do not match, stop — do not run the file.** `SHA256SUMS.txt` is kept attached to every past release even after its installer is removed, so you can still check a copy you downloaded months ago.
+
 3.  Double-click the setup file and follow the installation wizard (or extract the portable zip).
+
+> **About the SmartScreen warning:** the binaries are not code-signed yet (a certificate is a recurring cost for a hobby project), so Windows SmartScreen will warn that the publisher is unknown. That warning is about the *absence of a signature*, not about detected malware. Choose "More info" → "Run anyway" only after the SHA-256 above matches. If you are not comfortable with that, build from source instead.
 
 ---
 
@@ -41,7 +50,15 @@ A secure, ultra-fast, and flawless multi-account switcher and launcher for the P
 ## 🤝 Contribution & Support
 
 *   **Bug Reports:** Report any issues on the [Issues](https://github.com/HetCreep/PriconneMultiAccountLauncher/issues) page.
-*   **Contribute:** Fork, submit PRs, or check out the code at the main repository [HetCreep/PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher).
+*   **Security issues:** do **not** open a public issue — report privately through [GitHub Security Advisories](https://github.com/HetCreep/PriconneMultiAccountLauncher/security/advisories/new). See [SECURITY.md](SECURITY.md).
+*   **Account suspended, or login/launch broke after a DMM update?** Please file a [breakage report](https://github.com/HetCreep/PriconneMultiAccountLauncher/issues/new?template=breakage-report.yml). This launcher sends no telemetry, so a report is the only way the project learns that something stopped working.
+*   **Contribute:** Fork, submit PRs, or check out the code at the main repository [HetCreep/PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher). See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 🙏 Upstream
+
+This project is a fork of [fa0311/DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), which does the hard work of keeping the DMM Game Player integration alive. This fork specialises it for Princess Connect! Re:Dive multi-account use and adds per-account isolation; the DMM session handling it is built on came from upstream. Both are MIT-licensed and the original copyright notice is preserved in [LICENSE](LICENSE).
 
 ---
 

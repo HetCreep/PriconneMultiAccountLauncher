@@ -18,27 +18,44 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
 
       - name: Regenerate lock from requirements.txt
         shell: pwsh
         run: |
-          # Freeze in an ISOLATED venv so runner-preinstalled packages (pipx,
-          # argcomplete, userpath, etc.) don't leak into the lock.
+          # pip-compile, not pip freeze: `freeze` records versions only, so the lock
+          # pinned `==` with no artifact hashes and `pip install --require-hashes`
+          # could not be used. --generate-hashes records a SHA-256 per artifact for
+          # every direct AND transitive dependency, which is what makes the install
+          # tamper-evident (distribution-security.md). It also runs resolution in an
+          # isolated environment, so runner-preinstalled packages cannot leak in.
           python -m venv .lockenv
           $py = ".lockenv\Scripts\python.exe"
           & $py -m pip install --upgrade pip --quiet
-          & $py -m pip install -r requirements.txt --quiet
-          # Drop the bootstrap trio (pip / setuptools / wheel) which aren't project deps.
-          $frozen = & $py -m pip freeze | Where-Object { $_ -and ($_ -notmatch '^(pip|setuptools|wheel)==') } | Sort-Object
-          $frozen | Set-Content -Path requirements.lock.txt -Encoding utf8
-          Write-Host "=== regenerated requirements.lock.txt ($($frozen.Count) packages) ==="
+          & $py -m pip install -r requirements-dev.txt --quiet
+          & $py -m piptools compile requirements.txt `
+            --generate-hashes `
+            --strip-extras `
+            --output-file requirements.lock.txt
+          Write-Host "=== regenerated requirements.lock.txt ==="
           Get-Content requirements.lock.txt
+
+      - name: Verify the lock installs from hashes alone
+        shell: pwsh
+        run: |
+          # A lock nobody can install from is worse than no lock. Prove it before
+          # committing, in a throwaway env.
+          python -m venv .verifyenv
+          $vpy = ".verifyenv\Scripts\python.exe"
+          & $vpy -m pip install --upgrade pip --quiet
+          & $vpy -m pip install --require-hashes -r requirements.lock.txt --quiet
+          if ($LASTEXITCODE -ne 0) { throw "requirements.lock.txt does not install under --require-hashes" }
+          Write-Host "Lockfile verified under --require-hashes."
 
       - name: Commit if changed
         shell: pwsh

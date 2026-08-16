@@ -1,0 +1,12 @@
+# Development-only tools. NOT installed into the shipped binary — release.yml
+# installs requirements.lock.txt only.
+#
+# One formatter/linter, deliberately: ruff replaces black, isort, flake8 and most
+# of bandit's Python checks in a single pinned binary. Do not add black — it and
+# ruff format disagree about line length here and would reflow every file.
+# See .claude/rules/ecc/python/hooks.md.
+
+ruff==0.16.3
+
+# Lockfile regeneration with hashes (used by .github/workflows/lock.yml).
+pip-tools==7.6.1
