@@ -6,7 +6,7 @@
 # ruff format disagree about line length here and would reflow every file.
 # See .claude/rules/ecc/python/hooks.md.
 
-ruff==0.16.3
+ruff==0.16.5
 
 # Lockfile regeneration with hashes (used by .github/workflows/lock.yml).
 pip-tools==7.6.1
