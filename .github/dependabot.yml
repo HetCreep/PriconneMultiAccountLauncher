@@ -1,8 +1,12 @@
-# Dependabot — FULL coverage, notify-only (no auto-merge; the maintainer reviews
-# every PR and merges manually). Grouped + capped so each ecosystem opens one PR.
+# Dependabot — FULL coverage. Patch/minor bumps auto-merge once test+lint+CodeQL
+# are green (.github/workflows/dependabot-auto-merge.yml + the branch ruleset on
+# master); a major bump in a group blocks the whole grouped PR for manual review.
+# Grouped + capped so each ecosystem opens one PR. `assignees` fires a
+# notification on every PR (assignment is a "participating" event at any watch
+# level) — the maintainer's signal for anything auto-merge left open.
 version: 2
 updates:
-  # GitHub Actions across all workflows (release / lock / codeql).
+  # GitHub Actions across all workflows (release / lock / codeql / ci).
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -10,6 +14,8 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
+    assignees:
+      - HetCreep
     groups:
       github-actions:
         patterns: ["*"]
@@ -26,6 +32,8 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "deps"
+    assignees:
+      - HetCreep
     groups:
       python:
         patterns: ["*"]
