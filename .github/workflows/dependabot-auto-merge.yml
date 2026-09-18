@@ -1,0 +1,48 @@
+name: Dependabot auto-merge
+
+# Auto-merge Dependabot PATCH/MINOR bumps AFTER the required checks pass, for the
+# maintainer's bot ONLY. A ruleset on `master` (require test/lint/CodeQL, bypass
+# the repo owner) makes `--auto` WAIT for CI+CodeQL — without it `--auto` would
+# merge immediately, so the ruleset is load-bearing, not optional. A red check
+# leaves the PR open for the maintainer to look at. MAJOR bumps are never
+# auto-merged (a human reviews the breaking change) — for a grouped PR (see
+# .github/dependabot.yml) this means ANY major bump in the group blocks the
+# whole PR, which is the safety net we want. Only `dependabot[bot]` reaches the
+# merge step, so a human-opened PR never auto-merges.
+on: pull_request
+
+# Minimal top-level token; only the merge job escalates to the write scopes
+# `gh pr merge` needs (distribution-security.md / ci-gates.md permissions rule).
+permissions:
+  contents: read
+
+# Grouped per pull request, not per ref: two different Dependabot PRs must not
+# serialise behind each other. Enabling auto-merge (`gh pr merge --auto`) is
+# idempotent within one PR's own group, so a cancelled run corrupts nothing —
+# the next push to that same PR simply re-enables it.
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  auto-merge:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Patch + minor auto-merge; a major bump waits for a human. For the
+      # grouped python/github-actions PRs this is the group-level update-type,
+      # so a single major dependency in the group blocks the whole PR.
+      - name: Enable auto-merge (patch/minor)
+        if: ${{ steps.meta.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr merge --squash --auto "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

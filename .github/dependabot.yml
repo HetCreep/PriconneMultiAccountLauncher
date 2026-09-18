@@ -1,0 +1,39 @@
+# Dependabot — FULL coverage. Patch/minor bumps auto-merge once test+lint+CodeQL
+# are green (.github/workflows/dependabot-auto-merge.yml + the branch ruleset on
+# master); a major bump in a group blocks the whole grouped PR for manual review.
+# Grouped + capped so each ecosystem opens one PR. `assignees` fires a
+# notification on every PR (assignment is a "participating" event at any watch
+# level) — the maintainer's signal for anything auto-merge left open.
+version: 2
+updates:
+  # GitHub Actions across all workflows (release / lock / codeql / ci).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"
+    assignees:
+      - HetCreep
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # Python deps. Dependabot reads requirements.lock.txt (pinned) and opens PRs
+  # bumping it. NOTE: lock.yml also regenerates that file (full clean rebuild) —
+  # treat lock.yml as the manual "rebuild from scratch" tool and Dependabot as
+  # the incremental notifier. On conflict, prefer a lock.yml regen. The lock is
+  # produced in an isolated venv, so no runner-preinstalled noise (pipx) appears.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+    assignees:
+      - HetCreep
+    groups:
+      python:
+        patterns: ["*"]

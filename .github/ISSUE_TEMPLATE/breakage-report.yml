@@ -1,0 +1,83 @@
+name: "⚠️ Account suspended / login or launch broke"
+description: DMM restricted your account, or the launcher stopped working after a DMM or game update.
+labels: ["breakage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Why this template exists
+
+        This launcher collects **no telemetry** and never phones home, so a report like yours is the
+        only way the project finds out that its account-isolation assumptions stopped holding. If you
+        are reporting a suspended account, please file this even if you are not sure the launcher
+        caused it — a pattern across several reports is the signal, not any single one.
+
+        If you are reporting a **security vulnerability** instead, do not use this form —
+        see [SECURITY.md](https://github.com/HetCreep/PriconneMultiAccountLauncher/blob/master/SECURITY.md).
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What happened
+      options:
+        - My DMM account was suspended or restricted
+        - Login stopped working
+        - The game no longer launches
+        - Account switching stopped working correctly
+        - Something else changed after a DMM / game update
+    validations:
+      required: true
+
+  - type: input
+    id: launcher-version
+    attributes:
+      label: Launcher version
+      description: Shown in the window title and in the first lines of the log file.
+      placeholder: "Example: v6.3.41"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Windows version / build
+      placeholder: "Example: Windows 11 24H2 (26100)"
+    validations:
+      required: true
+
+  - type: input
+    id: dmm-version
+    attributes:
+      label: DMM Game Player version
+      description: Visible in the DMM Game Player client's own settings. Leave blank if you cannot check.
+      placeholder: "Example: 5.3.25"
+    validations:
+      required: false
+
+  - type: input
+    id: when
+    attributes:
+      label: When did it start
+      description: A date is enough. If it began right after an update, say which one.
+      placeholder: "Example: 2026-08-14, right after the DMM client auto-updated"
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: What you were doing
+      description: How many accounts, how often you switch, whether you use the official launch path or the bypass, and anything unusual.
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log excerpt
+      description: |
+        From `data\log\` next to the executable, newest file. The launcher redacts tokens and hardware
+        identifiers before writing, but skim it anyway before pasting — you are the last check.
+      render: Shell
+    validations:
+      required: false
