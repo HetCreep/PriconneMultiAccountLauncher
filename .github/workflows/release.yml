@@ -1,0 +1,239 @@
+name: Release
+
+# Build + publish the Windows installer whenever a version tag is pushed.
+# Local builds are NOT distributed — every user-facing artifact comes from here
+# (see docs/security policy: users verify only via GitHub Release builds).
+#
+# Usage:
+#   1. Bump the version in env.py / setup.iss / tools/version_info.txt
+#   2. Update RELEASE_NOTES.md (Highlights & Fixes for this version)
+#   3. git tag v6.3.36 && git push origin v6.3.36
+#
+# Actions are pinned to full commit SHAs (distribution-security.md). A moving tag
+# is a supply-chain hole: whoever can move `v6` can run code in a job holding a
+# contents:write token. Update a pin by resolving the tag to its commit and
+# recording the tag in the trailing comment.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Default-deny at workflow level; the one job that needs it grants itself write.
+permissions:
+  contents: read
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Derive version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $ver = $tag.TrimStart('v')
+          # A tag carrying a pre-release suffix (v6.4.0-rc1, -beta.2) must NOT become
+          # "latest". Without this the semver guard below fails to parse it, treats it
+          # as publishable, and it both replaces the stable release as latest AND strips
+          # the stable release's assets.
+          $pre = if ($tag -match '^v\d+\.\d+\.\d+-') { 'true' } else { 'false' }
+          "tag=$tag"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "prerelease=$pre" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building $tag (version $ver, prerelease=$pre)"
+
+      - name: Guard — only publish the newest version tag
+        id: guard
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Re-pushing an OLD tag (e.g. to restore a source-only release) also
+          # triggers this workflow. Don't let it republish an old version or strip
+          # the current one. The publish steps (strip old / create release) run
+          # only when this tag is the highest semver among all tags.
+          $tag = "${{ steps.ver.outputs.tag }}"
+          function ToVer($t) { if ($t -match '^v(\d+)\.(\d+)\.(\d+)$') { return [version]("{0}.{1}.{2}" -f $matches[1], $matches[2], $matches[3]) }; return $null }
+          $cur = ToVer $tag
+          $skip = $false
+          if ($null -ne $cur) {
+            $all = gh api "repos/${{ github.repository }}/tags?per_page=100" --jq '.[].name'
+            foreach ($t in $all) { $v = ToVer $t; if ($v -and $v -gt $cur) { Write-Host "Newer tag exists: $t (> $tag)"; $skip = $true; break } }
+          }
+          if ($skip) { Write-Host "::warning::$tag is not the newest tag — skipping publish (strip + release create)." }
+          "skip=$($skip.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          # pyinstaller is already in requirements.lock.txt — installing it separately
+          # and unpinned pulled a build tool from outside the lockfile.
+          #
+          # PENDING (distribution-security.md): this becomes
+          #   pip install --require-hashes -r requirements.lock.txt
+          # once the lockfile carries `--hash=` lines. lock.yml now generates them via
+          # pip-compile --generate-hashes; adding the flag before that workflow has
+          # been re-run would break the very next release, so it is switched on in the
+          # same change that lands the hashed lockfile. Do not add it earlier.
+          pip install -r requirements.lock.txt
+
+      - name: Test — redaction property test
+        shell: pwsh
+        run: |
+          # distribution-security.md makes the test suite a pipeline step before the
+          # build. The suite is currently one file, and it runs without pytest by
+          # design so this gate works before a runner is pinned. A failure here means
+          # credentials could reach a log — do not build past it.
+          python test/property/test_log_sanitizer.py
+
+      - name: Audit — fail on known-exploitable dependency CVEs
+        shell: pwsh
+        run: |
+          pip install pip-audit
+          # Separate from the SBOM step below: that one describes, this one blocks.
+          pip-audit -r requirements.lock.txt
+
+      - name: Bundle LICENSE
+        shell: pwsh
+        run: python tools/build.py
+
+      - name: Build exe (PyInstaller)
+        shell: pwsh
+        run: |
+          pyinstaller PriconneMultiAccountLauncher/PriconneMultiAccountLauncher.py `
+            --noconsole --onefile `
+            --collect-all customtkinter --collect-all selenium `
+            --icon assets/icons/PriconneMultiAccountLauncher.ico `
+            --version-file tools/version_info.txt `
+            --name PriconneMultiAccountLauncher
+
+      - name: Stage windows dir
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force windows | Out-Null
+          Copy-Item dist/PriconneMultiAccountLauncher.exe windows/ -Force
+          Copy-Item assets windows/assets -Recurse -Force
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc setup.iss
+
+      - name: Package + checksums
+        id: pkg
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $setup = "PriconneMultiAccountLauncher-v$ver-setup.exe"
+          $zip   = "PriconneMultiAccountLauncher-v$ver.zip"
+          Copy-Item dist/PriconneMultiAccountLauncher-Setup.exe "dist/$setup" -Force
+          Compress-Archive -Path windows/* -DestinationPath "dist/$zip" -Force
+          $h1 = (Get-FileHash "dist/$setup" -Algorithm SHA256).Hash.ToLower()
+          $h2 = (Get-FileHash "dist/$zip"   -Algorithm SHA256).Hash.ToLower()
+          "$h1  $setup" | Out-File dist/SHA256SUMS.txt -Encoding ascii
+          "$h2  $zip"   | Out-File dist/SHA256SUMS.txt -Append -Encoding ascii
+          "setup=$setup" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "zip=$zip"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "setup_sha=$h1" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Generate SBOM
+        shell: pwsh
+        run: |
+          # No continue-on-error: the SBOM is attached to the release below, so a
+          # silent failure here surfaced later as a confusing "file not found" in
+          # `gh release create`. release-verification.md lists it as mandatory —
+          # if it cannot be produced, the release should stop here and say so.
+          pip-audit -r requirements.lock.txt --format cyclonedx-json -o dist/sbom.cdx.json
+
+      - name: Strip stale binaries from old releases (keep verification artifacts)
+        if: steps.guard.outputs.skip != 'true' && steps.ver.outputs.prerelease != 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Policy: keep every release + tag for history, and only the LATEST release
+          # offers a downloadable installer — that stops users installing a stale build.
+          #
+          # But this step used to delete EVERY asset, including SHA256SUMS.txt. A user
+          # who downloaded v6.3.40 last month then had no way to check their copy was
+          # genuine, which is exactly what release-verification.md promises they can do.
+          # Verification artifacts are tiny and are kept forever; only the binaries go.
+          $current = "${{ steps.ver.outputs.tag }}"
+          $keep = @('SHA256SUMS.txt', 'SHA256SUMS.txt.asc', 'sbom.cdx.json')
+          $existing = gh release list --json tagName --jq '.[].tagName'
+          foreach ($r in $existing) {
+            if ($r -and ($r -ne $current)) {
+              Write-Host "Old release $r — removing installable binaries, keeping verification artifacts"
+              $assets = gh release view $r --json assets --jq '.assets[].name'
+              foreach ($a in $assets) {
+                if (-not $a) { continue }
+                if ($keep -contains $a) { Write-Host "  keeping: $a"; continue }
+                Write-Host "  deleting asset: $a"
+                gh release delete-asset $r "$a" --yes
+              }
+            }
+          }
+
+      - name: Assemble release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $sha = "${{ steps.pkg.outputs.setup_sha }}"
+          $body = ""
+          if (Test-Path RELEASE_NOTES.md) { $body = Get-Content RELEASE_NOTES.md -Raw }
+          $nl = [char]10
+          # release-verification.md requires this block on every release, and it must
+          # state the signing situation honestly rather than omitting it — a reader who
+          # sees no mention of Authenticode cannot tell "unsigned" from "we forgot".
+          $lines = @()
+          $lines += ""
+          $lines += "## Verification"
+          $lines += ""
+          $lines += ("- Installer SHA-256: ``" + $sha + "``")
+          $lines += "- Check your download before running it:"
+          $lines += ("  ``Get-FileHash -Algorithm SHA256 .\PriconneMultiAccountLauncher-v" + $ver + "-setup.exe``")
+          $lines += "- The full manifest is attached as ``SHA256SUMS.txt`` and stays attached to this release permanently, even after the installer is removed from it."
+          $lines += "- **Authenticode: not signed.** Windows SmartScreen will warn about an unknown publisher. Verify the SHA-256 above instead."
+          $lines += "- **PGP: no signature published.** ``SHA256SUMS.txt.asc`` is not produced yet."
+          $lines += "- Built by GitHub Actions from the tagged source. No artifact is uploaded from a maintainer's machine."
+          $verify = $lines -join $nl
+          ($body + $nl + $verify) | Out-File RELEASE_BODY.md -Encoding utf8
+
+      - name: Create release
+        if: steps.guard.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $args = @(
+            "${{ steps.ver.outputs.tag }}",
+            "dist/${{ steps.pkg.outputs.setup }}",
+            "dist/${{ steps.pkg.outputs.zip }}",
+            "dist/SHA256SUMS.txt",
+            "dist/sbom.cdx.json",
+            "--title", "v$ver Release",
+            "--notes-file", "RELEASE_BODY.md"
+          )
+          # A pre-release tag must never take the "latest" pointer.
+          if ("${{ steps.ver.outputs.prerelease }}" -eq "true") { $args += "--prerelease" }
+          gh release create @args

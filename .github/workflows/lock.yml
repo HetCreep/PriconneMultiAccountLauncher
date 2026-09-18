@@ -1,0 +1,72 @@
+name: Regenerate Lockfile
+
+# Regenerate requirements.lock.txt from requirements.txt in a clean Windows env,
+# so the lock reflects exactly the declared deps + their transitive closure —
+# no .venv pollution (pypresence/youtube-transcript-api/etc.), UTF-8 encoded.
+#
+# Run via the Actions tab -> "Regenerate Lockfile" -> "Run workflow",
+# or: gh workflow run lock.yml
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lock:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Regenerate lock from requirements.txt
+        shell: pwsh
+        run: |
+          # pip-compile, not pip freeze: `freeze` records versions only, so the lock
+          # pinned `==` with no artifact hashes and `pip install --require-hashes`
+          # could not be used. --generate-hashes records a SHA-256 per artifact for
+          # every direct AND transitive dependency, which is what makes the install
+          # tamper-evident (distribution-security.md). It also runs resolution in an
+          # isolated environment, so runner-preinstalled packages cannot leak in.
+          python -m venv .lockenv
+          $py = ".lockenv\Scripts\python.exe"
+          & $py -m pip install --upgrade pip --quiet
+          & $py -m pip install -r requirements-dev.txt --quiet
+          & $py -m piptools compile requirements.txt `
+            --generate-hashes `
+            --strip-extras `
+            --output-file requirements.lock.txt
+          Write-Host "=== regenerated requirements.lock.txt ==="
+          Get-Content requirements.lock.txt
+
+      - name: Verify the lock installs from hashes alone
+        shell: pwsh
+        run: |
+          # A lock nobody can install from is worse than no lock. Prove it before
+          # committing, in a throwaway env.
+          python -m venv .verifyenv
+          $vpy = ".verifyenv\Scripts\python.exe"
+          & $vpy -m pip install --upgrade pip --quiet
+          & $vpy -m pip install --require-hashes -r requirements.lock.txt --quiet
+          if ($LASTEXITCODE -ne 0) { throw "requirements.lock.txt does not install under --require-hashes" }
+          Write-Host "Lockfile verified under --require-hashes."
+
+      - name: Commit if changed
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add requirements.lock.txt
+          if (git status --porcelain requirements.lock.txt) {
+            git commit -m "chore(deps): regenerate requirements.lock.txt from requirements.txt (clean, UTF-8)"
+            git push
+            Write-Host "Lockfile updated and pushed."
+          } else {
+            Write-Host "Lockfile already up to date."
+          }
