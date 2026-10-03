@@ -1,0 +1,62 @@
+name: "🐛 Report a Bug"
+description: Report a bug in PriconneMultiAccountLauncher.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before Reporting a Bug
+        Before reporting a bug, please check [Issues](https://github.com/HetCreep/PriconneMultiAccountLauncher/issues) to see if a similar bug has already been reported. If there is a similar bug and you can provide additional information, please add a comment.
+
+  - type: input
+    id: launcher-version
+    attributes:
+      label: Launcher version
+      description: Shown in the window title and in the first lines of the log file. Without it a report usually cannot be acted on.
+      placeholder: "Example: v6.3.41"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      description: Please include the version.
+      placeholder: "Example: Windows 10"
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: Please provide detailed information about the bug. Attach images if necessary.
+      placeholder: |
+        A launch shortcut does not start the game when <setting> is <value>.
+        The launcher opens but the game window never appears.
+        Switching accounts unexpectedly re-downloads game data.
+        Steps to reproduce, expected vs. actual behavior, etc.
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message
+      description: If an error message is displayed, please paste it here.
+      render: Shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Paste the logs from the debug window, or from `data\log\` next to the executable.
+        The launcher redacts tokens and hardware identifiers before writing them, but skim the text
+        before pasting — you are the last check.
+      render: Shell
+    validations:
+      required: false
