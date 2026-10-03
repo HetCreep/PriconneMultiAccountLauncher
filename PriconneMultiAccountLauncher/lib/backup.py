@@ -178,6 +178,31 @@ def export_backup(passphrase: str, output_path: Path) -> dict:
     return summary
 
 
+def _safe_name(name: object) -> str:
+    """Validate a bundle entry name before it is joined onto a data directory.
+
+    A .pmal file is untrusted input (someone else can send one); the passphrase only
+    proves integrity, not safety. A name is rejected if it could leave its directory:
+    path separators, a drive colon, dot segments, control characters, or an absolute
+    path (joinpath would discard the base for those). Non-ASCII names are legitimate
+    account names and stay allowed.
+    """
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError("Backup contains an empty or non-text entry name")
+    if name in (".", "..") or name.startswith(".") or name != name.strip():
+        raise ValueError(f"Backup contains an unsafe entry name: {name!r}")
+    if any(ch in name for ch in ("/", chr(92), ":", "*", "?", '"', "<", ">", "|")) or any(ord(ch) < 32 for ch in name):
+        raise ValueError(f"Backup contains an unsafe entry name: {name!r}")
+    return name
+
+
+def _checked_path(base: Path, name: str, suffix: str) -> Path:
+    path = base.joinpath(_safe_name(name) + suffix)
+    if path.resolve().parent != base.resolve():
+        raise ValueError(f"Backup entry escapes its directory: {name!r}")
+    return path
+
+
 def import_backup(passphrase: str, input_path: Path) -> dict:
     """Decrypt .pmal, restore accounts/shortcuts to local data dir.
 
@@ -217,6 +242,18 @@ def import_backup(passphrase: str, input_path: Path) -> dict:
 
     bundle = json.loads(plaintext.decode("utf-8"))
 
+    # Validate EVERY entry name before writing anything, so a hostile bundle cannot
+    # leave a half-imported state behind (account writes would already have landed).
+    targets = {
+        "accounts": (DataPathConfig.ACCOUNT, ".bytes"),
+        "shortcuts": (DataPathConfig.SHORTCUT, ".json"),
+        "account_shortcuts": (DataPathConfig.ACCOUNT_SHORTCUT, ".json"),
+        "browser_config": (DataPathConfig.BROWSER_CONFIG, ".json"),
+    }
+    for section, (base, suffix) in targets.items():
+        for name in bundle.get(section, {}):
+            _checked_path(base, name, suffix)
+
     DataPathConfig.ACCOUNT.mkdir(parents=True, exist_ok=True)
     DataPathConfig.SHORTCUT.mkdir(parents=True, exist_ok=True)
     DataPathConfig.ACCOUNT_SHORTCUT.mkdir(parents=True, exist_ok=True)
@@ -230,20 +267,20 @@ def import_backup(passphrase: str, input_path: Path) -> dict:
         if device_params:
             session.device_params = device_params
         session.actauth = data
-        path = DataPathConfig.ACCOUNT.joinpath(name).with_suffix(".bytes")
+        path = _checked_path(DataPathConfig.ACCOUNT, name, ".bytes")
         session.write_bytes(str(path))  # re-encrypts under THIS machine's DPAPI
         summary["accounts"] += 1
 
     for name, data in bundle.get("shortcuts", {}).items():
-        _save_json_atomic(DataPathConfig.SHORTCUT.joinpath(name).with_suffix(".json"), data)
+        _save_json_atomic(_checked_path(DataPathConfig.SHORTCUT, name, ".json"), data)
         summary["shortcuts"] += 1
 
     for name, data in bundle.get("account_shortcuts", {}).items():
-        _save_json_atomic(DataPathConfig.ACCOUNT_SHORTCUT.joinpath(name).with_suffix(".json"), data)
+        _save_json_atomic(_checked_path(DataPathConfig.ACCOUNT_SHORTCUT, name, ".json"), data)
         summary["account_shortcuts"] += 1
 
     for name, data in bundle.get("browser_config", {}).items():
-        _save_json_atomic(DataPathConfig.BROWSER_CONFIG.joinpath(name).with_suffix(".json"), data)
+        _save_json_atomic(_checked_path(DataPathConfig.BROWSER_CONFIG, name, ".json"), data)
         summary["browser_config"] += 1
 
     logger.info("Imported backup from %s: %s", input_path, summary)

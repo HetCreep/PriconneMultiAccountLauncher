@@ -107,6 +107,8 @@ zh_CN:
     filename_not_entered: 未输入文件名。
     filename_already_exists: 该文件名已存在。
     filename_reserved: 该文件名为保留名称。
+    rename_active: "This account is currently active. Close the game and let the launcher finish before renaming it."
+    delete_active: "This account is currently active. Close the game and let the launcher finish before deleting it."
     import_error: 导入失败。
     import_success: 导入成功。
 

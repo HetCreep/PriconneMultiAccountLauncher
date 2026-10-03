@@ -107,6 +107,8 @@ th_TH:
     filename_not_entered: ยังไม่ได้กรอกชื่อไฟล์
     filename_already_exists: ชื่อไฟล์นี้มีอยู่แล้ว
     filename_reserved: ชื่อไฟล์นี้ถูกสงวนไว้
+    rename_active: "บัญชีนี้กำลังใช้งานอยู่ ปิดเกมและรอให้ launcher ทำงานเสร็จก่อนจึงจะเปลี่ยนชื่อได้"
+    delete_active: "บัญชีนี้กำลังใช้งานอยู่ ปิดเกมและรอให้ launcher ทำงานเสร็จก่อนจึงจะลบได้"
     import_error: นำเข้าล้มเหลว
     import_success: นำเข้าสำเร็จ
 

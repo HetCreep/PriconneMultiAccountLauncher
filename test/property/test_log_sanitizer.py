@@ -32,6 +32,13 @@ def test_key_value_pair_is_redacted():
     assert "[REDACTED]" in out
 
 
+def test_quoted_dict_key_is_redacted_without_relying_on_hex_pattern():
+    # Short value, so the long-hex token pattern cannot be what catches it.
+    for text in ("{'mac_address': 'AA:BB:CC:DD:EE:FF'}", '{"hdd_serial": "1234ABCD"}'):
+        out = redact(text)
+        assert "AA:BB:CC:DD:EE:FF" not in out and "1234ABCD" not in out, out
+
+
 def test_long_hex_blob_is_redacted():
     assert LONG_HEX not in redact(f"blob {LONG_HEX}")
 
@@ -73,10 +80,8 @@ def test_filter_redacts_mapping_args():
     values are used for the merge (when there is only one argument, and it is a
     dictionary)", so `record.args` is the dict itself.
 
-    Note the secret here is caught by the long-hex token pattern, NOT by _KEY_PATTERN:
-    in a dict repr the key is quoted (`'mac_address': ...`) and _KEY_PATTERN requires
-    the separator to follow the key directly. Do not read this as proof that dict-key
-    redaction works.
+    The secret here is long hex, so the token pattern also catches it; quoted-key
+    redaction proper is covered by test_quoted_dict_key_is_redacted_*.
     """
     record = _record("device %s", ({"mac_address": LONG_HEX},))
     assert isinstance(record.args, dict), "LogRecord should have collapsed the lone dict"

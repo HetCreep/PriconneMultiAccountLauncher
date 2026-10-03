@@ -256,28 +256,36 @@ class LanchLauncher(CTk):
 
         before_session = DgpSessionV2.read_dgp()
 
-        session = DgpSessionV2.read_cookies(Path(account_path))
-        if session.get_access_token() is None:
-            logger.warning("LanchLauncher.launch: account %s missing access token", data.account_path.get())
-            raise Exception(i18n.t("app.launch.export_error"))
-        session.write()
+        # The user's own DMM client login is overwritten below. It is restored in a
+        # finally so a failed start or a missing post-launch token cannot leave their
+        # client signed in as the launcher's account.
+        try:
+            session = DgpSessionV2.read_cookies(Path(account_path))
+            if session.get_access_token() is None:
+                logger.warning("LanchLauncher.launch: account %s missing access token", data.account_path.get())
+                raise Exception(i18n.t("app.launch.export_error"))
+            session.write()
 
-        dgp = AppConfig.DATA.dmm_game_player_program_folder.get_path()
+            dgp = AppConfig.DATA.dmm_game_player_program_folder.get_path()
 
-        dmm_args = data.dgp_args.get().split(" ")
-        process = ProcessManager.run(["DMMGamePlayer.exe"] + dmm_args, cwd=str(dgp.absolute()))
+            dmm_args = data.dgp_args.get().split(" ")
+            process = ProcessManager.run(["DMMGamePlayer.exe"] + dmm_args, cwd=str(dgp.absolute()))
 
-        if process.stdout is not None:
-            for line in process.stdout:
-                logger.debug(decode(line))
+            if process.stdout is not None:
+                for line in process.stdout:
+                    logger.debug(decode(line))
 
-        session = DgpSessionV2.read_dgp()
-        if session.get_access_token() is None:
-            logger.warning("LanchLauncher.launch: post-launch session missing token; import failed")
-            raise Exception(i18n.t("app.launch.import_error"))
-        session.write_bytes(str(account_path))
-        before_session.write()
-        logger.info("LanchLauncher.launch complete: id=%s", id)
+            session = DgpSessionV2.read_dgp()
+            if session.get_access_token() is None:
+                logger.warning("LanchLauncher.launch: post-launch session missing token; import failed")
+                raise Exception(i18n.t("app.launch.import_error"))
+            session.write_bytes(str(account_path))
+            logger.info("LanchLauncher.launch complete: id=%s", id)
+        finally:
+            try:
+                before_session.write()
+            except Exception:
+                logger.exception("Could not restore the user's DMM client session")
 
 
 class GameLauncherUac(CTk):

@@ -24,7 +24,9 @@ _KEY_PATTERN: Final = re.compile(
     r"(?i)(token|cookie|password|secret|auth|session|hwid|"
     r"mac[_-]?address|hdd[_-]?serial|motherboard|cpu[_-]?id|machine[_-]?guid|"
     r"accessToken|refreshToken|access_token|refresh_token|client_secret|api_key)"
-    r"\s*[:=]\s*[\"']?([^\"'\s,}]+)"
+    # Optional closing quote after the key: a dict repr renders {'mac_address': '..'},
+    # where the key is quoted and the separator does not follow it directly.
+    r"[\"']?\s*[:=]\s*[\"']?([^\"'\s,}]+)"
 )
 
 

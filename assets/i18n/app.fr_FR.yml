@@ -107,6 +107,8 @@ fr_FR:
     filename_not_entered: Nom du fichier non saisi.
     filename_already_exists: Ce nom de fichier existe déjà.
     filename_reserved: Le nom de fichier est réservé.
+    rename_active: "This account is currently active. Close the game and let the launcher finish before renaming it."
+    delete_active: "This account is currently active. Close the game and let the launcher finish before deleting it."
     import_error: Échec de l'import.
     import_success: Import réussi.
 

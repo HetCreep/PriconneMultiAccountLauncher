@@ -303,16 +303,30 @@ class DgpSessionV2:
         url = self.API_DGP.format(filelist_url)
         data = self.get_dgp(url).json()
 
+        root = output.resolve()
+
+        def contained(file: dict) -> Path:
+            # local_path comes from a server response: it must not escape the game dir
+            # via ".." segments or a drive-qualified path (CWE-22).
+            path = output.joinpath(file["local_path"][1:]).resolve()
+            if not path.is_relative_to(root):
+                raise ValueError(f"Refusing download path outside the game directory: {file['local_path']!r}")
+            return path
+
         def download_save(file: dict) -> tuple[int, dict]:
-            path = output.joinpath(file["local_path"][1:])
-            content = self.get(data["data"]["domain"] + "/" + file["path"], params=signed).content
+            path = contained(file)
+            response = self.get(data["data"]["domain"] + "/" + file["path"], params=signed)
+            # A 403/404 body (for example an expired CloudFront policy) must never be
+            # written into a game file and then recorded as the installed version.
+            response.raise_for_status()
+            content = response.content
             path.parent.mkdir(parents=True, exist_ok=True)
             with open(path, "wb") as f:
                 f.write(content)
             return file["size"], file
 
         def check_sum(file: dict) -> tuple[bool, dict]:
-            path = output.joinpath(file["local_path"][1:])
+            path = contained(file)
             if not file["check_hash_flg"]:
                 return True, file
             if file["force_delete_flg"]:

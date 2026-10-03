@@ -107,6 +107,8 @@ ko_KR:
     filename_not_entered: 파일 이름이 입력되지 않았습니다.
     filename_already_exists: 해당 파일 이름이 이미 존재합니다.
     filename_reserved: 해당 파일 이름은 예약되어 있습니다.
+    rename_active: "This account is currently active. Close the game and let the launcher finish before renaming it."
+    delete_active: "This account is currently active. Close the game and let the launcher finish before deleting it."
     import_error: 가져오기 실패.
     import_success: 가져오기 성공.
 

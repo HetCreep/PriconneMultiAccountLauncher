@@ -1,4 +1,5 @@
 import logging
+import shutil
 from pathlib import Path
 from tkinter import BooleanVar, StringVar
 from typing import Callable, Optional
@@ -12,6 +13,7 @@ from component.tab_menu import TabMenuComponent
 from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkLabel
 from component.auto_scroll_frame import CTkAutoScrollFrame
 from lib.DGPSessionV2 import DgpSessionV2
+from lib.account_swapper import BACKUP_BASE_DIR, get_last_active_account
 from lib.toast import ToastController, error_toast
 from models.shortcut_data import BrowserConfigData
 from static.config import DataPathConfig
@@ -240,6 +242,10 @@ class AccountEdit(CTkAutoScrollFrame):
 
         path = DataPathConfig.ACCOUNT.joinpath(self.filename.get()).with_suffix(".bytes")
         body_path = DataPathConfig.ACCOUNT.joinpath(self.body_filename.get()).with_suffix(".bytes")
+        if path != body_path and get_last_active_account() == self.filename.get():
+            # The registry snapshot and the last-active marker are keyed by account name,
+            # so renaming the account whose binding is live would orphan both.
+            raise Exception(i18n.t("app.account.rename_active"))
         config_path = DataPathConfig.BROWSER_CONFIG.joinpath(self.filename.get()).with_suffix(".json")
         config_body_path = DataPathConfig.BROWSER_CONFIG.joinpath(self.body_filename.get()).with_suffix(".json")
 
@@ -270,6 +276,15 @@ class AccountEdit(CTkAutoScrollFrame):
                 raise e
             path.unlink()
             check_file(lambda: config_path.unlink())
+            # Carry the registry snapshot to the new name. Left behind, the next swap finds
+            # no backup and clears the live binding as if this were a brand-new account.
+            old_backup = BACKUP_BASE_DIR.joinpath(self.filename.get())
+            new_backup = BACKUP_BASE_DIR.joinpath(self.body_filename.get())
+            if old_backup.is_dir() and not new_backup.exists():
+                try:
+                    shutil.move(str(old_backup), str(new_backup))
+                except OSError:
+                    logger.exception("Could not move registry snapshot %s -> %s", old_backup, new_backup)
             self.values.remove(self.filename.get())
             self.values.append(self.body_filename.get())
             self.filename.set(self.body_filename.get())
@@ -281,8 +296,13 @@ class AccountEdit(CTkAutoScrollFrame):
 
     @error_toast
     def delete_callback(self):
+        if get_last_active_account() == self.filename.get():
+            raise Exception(i18n.t("app.account.delete_active"))
         path = DataPathConfig.ACCOUNT.joinpath(self.filename.get()).with_suffix(".bytes")
         path.unlink()
+        # Remove the registry snapshot too, or a later account created with the same name
+        # silently inherits this one's game binding.
+        shutil.rmtree(BACKUP_BASE_DIR.joinpath(self.filename.get()), ignore_errors=True)
         self.values.remove(self.filename.get())
         self.filename.set("")
         children_destroy(self)

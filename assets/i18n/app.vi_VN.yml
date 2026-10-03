@@ -107,6 +107,8 @@ vi_VN:
     filename_not_entered: Chưa nhập tên tệp.
     filename_already_exists: Tên tệp đã tồn tại.
     filename_reserved: Tên tệp đã được giữ chỗ.
+    rename_active: "This account is currently active. Close the game and let the launcher finish before renaming it."
+    delete_active: "This account is currently active. Close the game and let the launcher finish before deleting it."
     import_error: Nhập thất bại.
     import_success: Nhập thành công.
 

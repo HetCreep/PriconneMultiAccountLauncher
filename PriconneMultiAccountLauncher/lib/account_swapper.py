@@ -69,14 +69,26 @@ def _decode_value(data: Any, vtype: int) -> Any:
     return data
 
 
+_ERROR_NO_MORE_ITEMS = 259
+
+
+def _is_end_of_enum(exc: OSError) -> bool:
+    """True only for the documented end-of-list error; any other OSError is a real failure."""
+    return getattr(exc, "winerror", None) == _ERROR_NO_MORE_ITEMS
+
+
 def _export_subtree(root: int, subkey: str) -> Optional[dict]:
+    """Snapshot a registry subtree.
+
+    Returns None ONLY when the key is genuinely absent. Any other failure (access
+    denied, a nested key that cannot be opened, an enumeration error) raises OSError:
+    "absent" and "could not read" must never look the same, because callers treat
+    absent as "nothing to lose" and go on to overwrite the live binding.
+    """
     try:
         with winreg.OpenKey(root, subkey, 0, winreg.KEY_READ) as key:
             return _walk_key(key)
     except FileNotFoundError:
-        return None
-    except OSError as exc:
-        logger.error("Registry read failed for %s: %s", subkey, exc)
         return None
 
 
@@ -86,8 +98,10 @@ def _walk_key(key) -> dict:
     while True:
         try:
             name, data, vtype = winreg.EnumValue(key, i)
-        except OSError:
-            break
+        except OSError as exc:
+            if _is_end_of_enum(exc):
+                break
+            raise
         values[name] = {
             "type": _REG_TYPE_MAP.get(vtype, str(vtype)),
             "data": _encode_value(data, vtype),
@@ -99,8 +113,10 @@ def _walk_key(key) -> dict:
     while True:
         try:
             sub_name = winreg.EnumKey(key, i)
-        except OSError:
-            break
+        except OSError as exc:
+            if _is_end_of_enum(exc):
+                break
+            raise
         with winreg.OpenKey(key, sub_name, 0, winreg.KEY_READ) as sub:
             subkeys[sub_name] = _walk_key(sub)
         i += 1
@@ -109,6 +125,11 @@ def _walk_key(key) -> dict:
 
 
 def _delete_subtree(root: int, subkey: str) -> None:
+    """Delete a subtree. A missing key is fine; any other failure RAISES.
+
+    Swallowing it let callers continue on a partial delete: the game then inherits
+    the previous account's leftover values, or an import merges into them.
+    """
     try:
         # KEY_READ is enough to enumerate children; DeleteKey below opens with the
         # DELETE right it needs on its own. KEY_ALL_ACCESS here was more than the
@@ -119,16 +140,16 @@ def _delete_subtree(root: int, subkey: str) -> None:
             while True:
                 try:
                     children.append(winreg.EnumKey(key, i))
-                except OSError:
-                    break
+                except OSError as exc:
+                    if _is_end_of_enum(exc):
+                        break
+                    raise
                 i += 1
         for child in children:
             _delete_subtree(root, f"{subkey}\\{child}")
         winreg.DeleteKey(root, subkey)
     except FileNotFoundError:
         return
-    except OSError as exc:
-        logger.warning("Registry delete failed for %s: %s", subkey, exc)
 
 
 def _import_subtree(root: int, subkey: str, tree: dict) -> None:
@@ -167,13 +188,21 @@ def get_last_active_account() -> Optional[str]:
         return None
 
 
-def set_last_active_account(account_name: str) -> None:
-    LAST_ACTIVE_FILE.parent.mkdir(parents=True, exist_ok=True)
+def set_last_active_account(account_name: str) -> bool:
+    """Record which account's binding is live. Returns False if it could not be saved.
+
+    The marker drives post-session backup and crash recovery, so a failed write must
+    not be silent: without it the session's binding is never saved and the baseline
+    restore then overwrites it.
+    """
     try:
+        LAST_ACTIVE_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(LAST_ACTIVE_FILE, "w", encoding="utf-8") as f:
             json.dump({"account_name": account_name}, f, indent=4, ensure_ascii=False)
+        return True
     except OSError as exc:
         logger.error("Failed to write last active account file: %s", exc)
+        return False
 
 
 def backup_account(account_name: str) -> bool:
@@ -204,7 +233,12 @@ def backup_account(account_name: str) -> bool:
         logger.error("Cannot create backup dir %s: %s", backup_dir, exc)
         return False
 
-    snapshot = _export_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
+    try:
+        snapshot = _export_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
+    except OSError as exc:
+        # Could not READ the live binding — that is not "nothing to lose".
+        logger.error("Registry read failed while backing up %s: %s", account_name, exc)
+        return False
     if snapshot is None:
         logger.info("Registry subtree absent (%s); nothing to back up for %s", registry_subkey, account_name)
         return True
@@ -282,7 +316,11 @@ def restore_account(account_name: str) -> bool:
         # the previous account's binding (Cygames "1 game data per PC account"
         # error). Force a fresh-start clear so the game does a clean login.
         logger.info("No registry backup for %s — clearing live registry for fresh first launch", account_name)
-        _clear_account_binding_for_fresh_start(account_name)
+        try:
+            _clear_account_binding_for_fresh_start(account_name)
+        except OSError as exc:
+            logger.error("Could not clear the live binding for fresh start of %s: %s", account_name, exc)
+            return False
         # Intended end state, not a failure: a never-launched account must start
         # from a clean binding rather than inherit the previous account's.
         return True
@@ -298,10 +336,15 @@ def restore_account(account_name: str) -> bool:
     # failure part-way used to leave NEITHER account's binding present — the machine
     # ends up bound to nothing and the user's previous account has to re-login.
     # Capture the pre-image first and put it back if the import does not complete.
-    pre_image = _export_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
-
-    _delete_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
     try:
+        pre_image = _export_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
+    except OSError as exc:
+        # No rollback image means no safe way to proceed: abort before touching anything.
+        logger.error("Cannot capture the pre-swap binding, aborting restore of %s: %s", account_name, exc)
+        return False
+
+    try:
+        _delete_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
         _import_subtree(winreg.HKEY_CURRENT_USER, registry_subkey, snapshot)
         logger.info("Restored registry for %s", account_name)
         return True
@@ -531,4 +574,12 @@ def _swap_account_data_locked(new_account_name: str) -> None:
             f"Could not apply the saved state for '{new_account_name}'. "
             f"The previous binding was rolled back where possible — see the log for detail."
         )
-    set_last_active_account(new_account_name)
+    if not set_last_active_account(new_account_name):
+        # Binding is live but unrecorded: nothing would back it up after the session
+        # and crash recovery could not see it. Return to the baseline and stop.
+        if _baseline_exists():
+            restore_account(BASELINE_NAME)
+        raise AccountSwapAborted(
+            f"Could not record that '{new_account_name}' is active. "
+            f"The previous state was restored where possible. Check that the launcher can write to its data folder."
+        )
