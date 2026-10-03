@@ -577,8 +577,8 @@ def _swap_account_data_locked(new_account_name: str) -> None:
     if not set_last_active_account(new_account_name):
         # Binding is live but unrecorded: nothing would back it up after the session
         # and crash recovery could not see it. Return to the baseline and stop.
-        if _baseline_exists():
-            restore_account(BASELINE_NAME)
+        if _baseline_exists() and not restore_account(BASELINE_NAME):
+            logger.error("Baseline restore also failed while aborting the swap for '%s'.", new_account_name)
         raise AccountSwapAborted(
             f"Could not record that '{new_account_name}' is active. "
             f"The previous state was restored where possible. Check that the launcher can write to its data folder."
