@@ -1,4 +1,6 @@
-.\.venv\Scripts\pip.exe freeze > requirements.lock.txt
+# requirements.lock.txt is generated with hashes by .github/workflows/lock.yml. Do NOT
+# regenerate it here: an unhashed local freeze breaks --require-hashes installs, pulls in
+# stray .venv packages, and PowerShell 5.1 writes UTF-16.
 .\.venv\Scripts\python.exe .\tools\build.py
 
 Remove-Item -Path "build" -Recurse -Force -ErrorAction SilentlyContinue

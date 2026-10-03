@@ -68,7 +68,9 @@ jobs:
           $cur = ToVer $tag
           $skip = $false
           if ($null -ne $cur) {
-            $all = gh api "repos/${{ github.repository }}/tags?per_page=100" --jq '.[].name'
+            # --paginate: the API returns 30 per page by default and is not semver-sorted, so a
+            # higher tag on a later page made an old tag look newest and stripped the real latest.
+            $all = gh api --paginate "repos/${{ github.repository }}/tags?per_page=100" --jq '.[].name'
             foreach ($t in $all) { $v = ToVer $t; if ($v -and $v -gt $cur) { Write-Host "Newer tag exists: $t (> $tag)"; $skip = $true; break } }
           }
           if ($skip) { Write-Host "::warning::$tag is not the newest tag — skipping publish (strip + release create)." }

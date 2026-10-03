@@ -6,6 +6,7 @@ tries UTF-8 first, falls back to latin1, then logs and skips on hard error.
 
 import glob
 import sys
+import sysconfig
 from pathlib import Path
 
 WIDTH = 62
@@ -30,7 +31,13 @@ def main() -> int:
     output = ""
     Path("assets/license").mkdir(parents=True, exist_ok=True)
 
-    files = ["./LICENSE", *glob.glob(".venv/**/*[Ll][Ii][Cc][Ee][Nn][SsCc][Ee]*", recursive=True)]
+    # release.yml installs into the runner's interpreter, not .venv, so search the active
+    # site-packages as well; otherwise the shipped file contained only the project LICENSE.
+    pattern = "**/*[Ll][Ii][Cc][Ee][Nn][SsCc][Ee]*"
+    roots = [".venv", sysconfig.get_paths()["purelib"]]
+    files = ["./LICENSE"]
+    for root in dict.fromkeys(roots):
+        files.extend(glob.glob(str(Path(root) / pattern), recursive=True))
     for file in files:
         path = Path(file)
         if not path.is_file():

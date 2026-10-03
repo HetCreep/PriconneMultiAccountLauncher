@@ -41,8 +41,12 @@ jobs:
       # Patch + minor auto-merge; a major bump waits for a human. For the
       # grouped python/github-actions PRs this is the group-level update-type,
       # so a single major dependency in the group blocks the whole PR.
-      - name: Enable auto-merge (patch/minor)
-        if: ${{ steps.meta.outputs.update-type != 'version-update:semver-major' }}
-        run: gh pr merge --squash --auto "${{ github.event.pull_request.html_url }}"
+      # ALLOW-LIST, not "anything but major": fetch-metadata leaves update-type empty for
+      # some grouped and non-semver updates, and `!= major` is true for empty. An update
+      # it could not classify must wait for a human exactly like a major one.
+      - name: Enable auto-merge (patch/minor only)
+        if: ${{ contains(fromJSON('["version-update:semver-patch","version-update:semver-minor"]'), steps.meta.outputs.update-type) }}
+        run: gh pr merge --squash --auto "$PR_URL"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}

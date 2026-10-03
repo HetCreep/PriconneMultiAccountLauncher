@@ -69,4 +69,4 @@ The installer's uninstaller preserves your `data\` directory by default (account
 
 ## Reporting Privacy Concerns
 
-If you find the launcher contacting an unexpected host, reading data you did not authorize, or storing credentials outside DPAPI: open an issue at <https://github.com/HetCreep/PriconneMultiAccountLauncher/issues> with the offending log lines (redacted by the filter) and reproduction steps.
+If you find the launcher contacting an unexpected host, reading data you did not authorize, or storing credentials outside DPAPI: report it **privately** through [GitHub Security Advisories](https://github.com/HetCreep/PriconneMultiAccountLauncher/security/advisories/new) — see [SECURITY.md](SECURITY.md). Do not open a public issue for it: unexpected network contact or credential exposure is a security report. Questions about what the launcher stores or sends that are not a suspected vulnerability are fine as a normal [issue](https://github.com/HetCreep/PriconneMultiAccountLauncher/issues).
