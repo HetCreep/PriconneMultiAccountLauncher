@@ -1,6 +1,6 @@
 altgraph==0.17.5
 attrs==26.1.0
-certifi==2026.10.19
+certifi==2026.10.23
 cffi==2.1.1
 charset-normalizer==3.5.2
 coloredlogs==15.0.1
@@ -15,9 +15,9 @@ packaging==26.3
 pefile==2024.8.26
 pillow==13.0.0
 psutil==7.2.2
-pycparser==3.11
-pycryptodome==3.24.1
-pyinstaller-hooks-contrib==2026.8
+pycparser==3.12
+pycryptodome==4.2.0
+pyinstaller-hooks-contrib==2026.9
 pyinstaller==6.22.3
 pyreadline3==3.5.6
 PySocks==1.7.1
