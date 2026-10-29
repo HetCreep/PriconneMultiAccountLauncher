@@ -206,7 +206,7 @@ def _checked_path(base: Path, name: str, suffix: str, *, account: bool = False) 
 
 def _checked_entry(section: str, name: str, data: object) -> dict:
     if not isinstance(data, dict):
-        raise ValueError(f"Backup entry {section}/{name!r} is not an object")
+        raise ValueError(f"Backup entry {section}/{name!r} is not an object")  # noqa: TRY004 - every caller catches ValueError for "bad data"; a second type would slip past them
     check_json_shape(data, max_depth=_MAX_ENTRY_DEPTH, max_nodes=_MAX_ENTRY_NODES)
     if len(json.dumps(data, separators=(",", ":"))) > _MAX_ENTRY_BYTES:
         raise ValueError(f"Backup entry {section}/{name!r} is too large")
@@ -267,11 +267,11 @@ def import_backup(passphrase: str, input_path: Path) -> dict:
         "browser_config": (DataPathConfig.BROWSER_CONFIG, ".json"),
     }
     if not isinstance(bundle, dict):
-        raise ValueError("Backup content is not an object")
+        raise ValueError("Backup content is not an object")  # noqa: TRY004 - every caller catches ValueError for "bad data"; a second type would slip past them
     for section, (base, suffix) in targets.items():
         entries = bundle.get(section, {})
         if not isinstance(entries, dict):
-            raise ValueError(f"Backup section {section!r} is not an object")
+            raise ValueError(f"Backup section {section!r} is not an object")  # noqa: TRY004 - every caller catches ValueError for "bad data"; a second type would slip past them
         for name, data in entries.items():
             _checked_path(base, name, suffix, account=(section == "accounts"))
             _checked_entry(section, name, data)

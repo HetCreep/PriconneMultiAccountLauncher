@@ -83,7 +83,7 @@ def test_json_shape_limits():
         nxt = []
         cur.append(nxt)
         cur = nxt
-    for bad, kw in ((deep, dict(max_depth=8, max_nodes=10_000)), (list(range(200)), dict(max_depth=8, max_nodes=100))):
+    for bad, kw in ((deep, {"max_depth": 8, "max_nodes": 10_000}), (list(range(200)), {"max_depth": 8, "max_nodes": 100})):
         try:
             check_json_shape(bad, **kw)
         except ValueError:

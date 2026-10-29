@@ -55,10 +55,10 @@ def _validate_tree(tree: object, depth: int = 0) -> None:
     if depth > 32:
         raise ValueError("registry snapshot nested too deeply")
     if not isinstance(tree, dict):
-        raise ValueError("registry snapshot node is not an object")
+        raise ValueError("registry snapshot node is not an object")  # noqa: TRY004 - every caller catches ValueError for "bad data"; a second type would slip past them
     values, subkeys = tree.get("values", {}), tree.get("subkeys", {})
     if not isinstance(values, dict) or not isinstance(subkeys, dict):
-        raise ValueError("registry snapshot node has malformed values/subkeys")
+        raise ValueError("registry snapshot node has malformed values/subkeys")  # noqa: TRY004 - every caller catches ValueError for "bad data"; a second type would slip past them
     for entry in values.values():
         if not isinstance(entry, dict) or not isinstance(entry.get("type"), str) or "data" not in entry:
             raise ValueError("registry snapshot value entry is malformed")
