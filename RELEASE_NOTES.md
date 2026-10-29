@@ -1,25 +1,31 @@
-This release fixes a "DMM API error (result_code=203)" that could appear when you create a shortcut, if the selected account's saved login had expired.
+This is a security and reliability release. It hardens account switching and backup import, and stops several ways a log or error window could expose sensitive data.
 
 ## Highlights & Fixes
 
-- **"Create Shortcut" no longer fails with `DMM API error (result_code=203)`**:
-  - Creating a shortcut used to fire a live DMM launch request just to read the game's title. That request fails with `result_code=203` ("refresh token is invalid") whenever the selected account's saved login token has expired — which commonly happens after the DMM Game Player client updates. The token is only refreshed when you actually launch the game, never during shortcut creation, so making a shortcut could error out (and pop a misleading message) even though launching the game still worked.
-  - Shortcut creation now reads the game icon from your local DMM install and names the shortcut after the filename you type — with no live login call. The error is gone, shortcut creation works even with an expired/offline session, and your saved token is left untouched. Token refresh still happens normally the moment you launch the game.
-  - As a side benefit, this removes a launch request that was being sent outside of an actual, user-initiated game launch.
+- **Account switching no longer loses your saved state.** A failed backup, a failed restore, or a failed write of the "active account" marker now stops the switch and puts the previous state back, instead of carrying on and overwriting your game binding. Two launcher windows switching accounts at the same moment are now serialized. Your own DMM client login is restored even if the game fails to start.
+- **Importing a backup (`.pmal`) is safer.** A backup file from someone else can no longer write outside the launcher's data folder, run commands through a crafted shortcut name, point an account at another folder, or inflate into a huge file. The launcher's internal `_baseline_` snapshot cannot be imported, renamed or deleted as if it were an account.
+- **Logs and error windows no longer leak credentials.** Redaction now fails closed, covers exception tracebacks, quoted hardware-ID fields and `user:password@` in proxy addresses, and always applies to the debug window (the "mask token" option is gone: it implied tokens were shown when it was off).
+- **Game and client downloads are checked.** A failed download (for example an expired signed link) is no longer written into your game files and recorded as the installed version, and a server-supplied path can no longer escape the game folder.
+- **Removing a proxy in Settings takes effect immediately** instead of continuing to route requests until you restart.
+- **Renaming or deleting an account** now moves or removes its saved game binding too, and is refused while that account is the active one.
+- `DMMGamePlayer.exe` is launched by its full path.
+- Release downloads: `SHA256SUMS.txt` and the SBOM now stay attached to every older release, so a copy you downloaded earlier can still be verified.
 
-## Note
+## Upgrade Notes
 
-- If clicking a shortcut shows a login/expired-session error when the game tries to start, that account's saved DMM login has expired. Re-import that account (Account tab → import) to refresh it, then launch again.
+- Existing accounts and shortcuts are preserved.
+- A backup is now rejected as a whole if an entry name contains a dot, `$`, a backtick or `;`, or is reserved. The error names the entry. Account names with a dot never worked reliably, because the launcher derives file names from them.
+- New installs default to `%LOCALAPPDATA%\Programs`; existing installs upgrade in place.
+
+## Security
+
+- Several issues found by code review and a security scan are fixed. Report vulnerabilities privately through GitHub Security Advisories, not the public tracker — see `SECURITY.md`.
 
 ## Build & Distribution
 
 - Builds run entirely in GitHub Actions on every version tag. Local builds are not distributed.
-- The latest release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM.
-- Older releases keep their source code **and their `SHA256SUMS.txt` / SBOM** — only the installable binaries are removed, so a copy you downloaded earlier can still be verified.
-
-## Security
-
-- No security fixes in this release. Report vulnerabilities privately via [GitHub Security Advisories](https://github.com/HetCreep/PriconneMultiAccountLauncher/security/advisories/new), not the public issue tracker — see `SECURITY.md`.
+- Each release ships the installer, a portable `.zip`, `SHA256SUMS.txt`, and an SBOM. Older releases keep their source code, `SHA256SUMS.txt` and SBOM; only the installable binaries are removed.
+- The release is now gated on automated tests and a dependency vulnerability audit.
 
 ## Known Issues
 
@@ -30,7 +36,3 @@ This release fixes a "DMM API error (result_code=203)" that could appear when yo
 - Windows 10 1809+ / Windows 11, 64-bit.
 - Requires Princess Connect! Re:Dive installed via DMM Game Player.
 - Japan-region access (DMM is region-locked) — set a JP proxy/VPN in Settings → Advanced if needed.
-
-## Upgrade Notes
-
-- No action required. Existing accounts and shortcuts are preserved.
