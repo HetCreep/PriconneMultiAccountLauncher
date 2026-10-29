@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from lib.game_paths import get_registry_subkey, verify_game_data_present
-from lib.safe_names import check_name
+from lib.safe_names import BASELINE_NAME, check_name
 from lib.single_instance import registry_swap_lock
 from static.config import DataPathConfig
 
@@ -26,12 +26,11 @@ LAST_ACTIVE_FILE: Path = DataPathConfig.DATA.joinpath("last_active_account.json"
 
 _ALWAYS_EXTRACT = "always_extract_from_dmm"
 
-# Sentinel slot representing the user's pre-launcher game state — the DMM account
+# BASELINE_NAME (defined once in lib.safe_names) names the sentinel slot holding the user's pre-launcher game state — the DMM account
 # they were already logged into via DMM Game Player before installing this fork.
 # Snapshotted once on the first managed swap so post-game-exit can restore the
 # machine to that state (per user's design: B/C are temporary slots layered over
 # the persistent A baseline).
-BASELINE_NAME = "_baseline_"
 
 
 def _backup_dir(account_name: str) -> Path:
