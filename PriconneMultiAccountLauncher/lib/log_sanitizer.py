@@ -35,13 +35,18 @@ def _sanitize_for_log_injection(text: str) -> str:
     return text.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
 
 
+_URL_USERINFO: Final = re.compile(r"(?i)\b([a-z][a-z0-9+.\-]*://)[^/\s@\"']*@")
+
+
 def redact_secrets(text: str) -> str:
     """Replace credential-shaped substrings. Line structure is left intact.
 
     Use for text whose newlines are ours and must stay readable (tracebacks). For
     anything user- or server-controlled use `redact()`, which also neutralizes CR/LF.
     """
-    out = _KEY_PATTERN.sub(lambda m: f"{m.group(1)}=[REDACTED]", text)
+    # user:password@ in a URL (an authenticated proxy setting is logged at startup).
+    out = _URL_USERINFO.sub(lambda m: f"{m.group(1)}[REDACTED]@", text)
+    out = _KEY_PATTERN.sub(lambda m: f"{m.group(1)}=[REDACTED]", out)
     for pat in _TOKEN_PATTERNS:
         out = pat.sub("[REDACTED:token]", out)
     return out

@@ -39,6 +39,14 @@ def test_quoted_dict_key_is_redacted_without_relying_on_hex_pattern():
         assert "AA:BB:CC:DD:EE:FF" not in out and "1234ABCD" not in out, out
 
 
+def test_url_userinfo_is_redacted():
+    for text in ("proxy http://alice:hunter2@proxy.example:8080/x", "{'proxy_all': 'socks5://bob:pw@10.0.0.1:1080'}", "https://tokenonly@host/"):
+        out = redact(text)
+        assert "hunter2" not in out and "pw@" not in out and "bob" not in out and "alice" not in out and "tokenonly" not in out, out
+    # A URL with no credentials is left readable: host and port are useful for support.
+    assert "proxy.example:8080" in redact("http://proxy.example:8080/")
+
+
 def test_long_hex_blob_is_redacted():
     assert LONG_HEX not in redact(f"blob {LONG_HEX}")
 

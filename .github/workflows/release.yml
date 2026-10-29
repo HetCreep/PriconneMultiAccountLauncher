@@ -99,6 +99,8 @@ jobs:
           # design so this gate works before a runner is pinned. A failure here means
           # credentials could reach a log — do not build past it.
           python test/property/test_log_sanitizer.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python test/property/test_safe_names.py
 
       - name: Audit — fail on known-exploitable dependency CVEs
         shell: pwsh

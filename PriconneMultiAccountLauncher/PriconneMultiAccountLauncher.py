@@ -22,6 +22,39 @@ from static.loder import config_loder, config_migrate
 from tkinter_colored_logging_handlers.main import LoggingHandler
 
 
+_ENV_UNSET = object()
+_original_all_proxy: object = _ENV_UNSET
+
+
+def _apply_proxy_settings() -> None:
+    """Make the process's proxy routing match the saved settings, in both directions.
+
+    Settings reload re-runs the loader in the same process. Applying only non-empty values
+    meant a proxy the user had just removed kept routing every request until restart.
+    """
+    global _original_all_proxy
+    if _original_all_proxy is _ENV_UNSET:
+        # Taken once, before this app ever touches it, so clearing the setting restores
+        # what the user's own environment had rather than deleting it.
+        _original_all_proxy = os.environ.get("ALL_PROXY")
+
+    proxy_all = AppConfig.DATA.proxy_all.get()
+    if proxy_all != "":
+        os.environ["ALL_PROXY"] = proxy_all
+    elif _original_all_proxy is None:
+        os.environ.pop("ALL_PROXY", None)
+    else:
+        os.environ["ALL_PROXY"] = str(_original_all_proxy)
+
+    dmm_proxy = AppConfig.DATA.dmm_proxy_all.get()
+    if dmm_proxy != "":
+        DgpSessionV2.PROXY["http"] = dmm_proxy
+        DgpSessionV2.PROXY["https"] = dmm_proxy
+    else:
+        DgpSessionV2.PROXY.pop("http", None)
+        DgpSessionV2.PROXY.pop("https", None)
+
+
 def loder(master: LanchLauncher):
     DataPathConfig.ACCOUNT.mkdir(exist_ok=True, parents=True)
     DataPathConfig.ACCOUNT_SHORTCUT.mkdir(exist_ok=True, parents=True)
@@ -74,11 +107,7 @@ def loder(master: LanchLauncher):
 
     config_migrate()
 
-    if AppConfig.DATA.proxy_all.get() != "":
-        os.environ["ALL_PROXY"] = AppConfig.DATA.proxy_all.get()
-    if AppConfig.DATA.dmm_proxy_all.get() != "":
-        DgpSessionV2.PROXY["http"] = AppConfig.DATA.dmm_proxy_all.get()
-        DgpSessionV2.PROXY["https"] = AppConfig.DATA.dmm_proxy_all.get()
+    _apply_proxy_settings()
 
     ctk.set_default_color_theme(str(AssetsPathConfig.THEMES.joinpath(AppConfig.DATA.theme.get()).with_suffix(".json")))
 

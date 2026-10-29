@@ -269,7 +269,11 @@ class LanchLauncher(CTk):
             dgp = AppConfig.DATA.dmm_game_player_program_folder.get_path()
 
             dmm_args = data.dgp_args.get().split(" ")
-            process = ProcessManager.run(["DMMGamePlayer.exe"] + dmm_args, cwd=str(dgp.absolute()))
+            # Absolute path. A bare name is resolved by Windows, whose search order includes the
+            # launcher's own working directory: a DMMGamePlayer.exe planted there would run
+            # instead of the real one. `cwd` only sets the child's directory, not the lookup.
+            dmm_exe = dgp.absolute().joinpath("DMMGamePlayer.exe")
+            process = ProcessManager.run([str(dmm_exe)] + dmm_args, cwd=str(dgp.absolute()))
 
             if process.stdout is not None:
                 for line in process.stdout:

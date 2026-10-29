@@ -4,10 +4,23 @@ from typing import Any
 
 import yaml
 
+def load_locale(path: str) -> dict:
+    """Parse one locale file, refusing YAML aliases.
+
+    A locale is a flat tree of strings; it has no use for anchors and aliases. They let a
+    few lines expand into exponentially many paths in i18n_flatten (a contributed locale
+    file could exhaust this checker's memory), so reject them before building anything.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read()
+    if any(isinstance(event, yaml.AliasEvent) for event in yaml.parse(text, Loader=yaml.SafeLoader)):
+        raise SystemExit(f"{path}: YAML aliases are not allowed in locale files")
+    return yaml.safe_load(text)
+
+
 yaml_load = {}
 for lang in glob.glob("assets/i18n/*.yml"):
-    with open(lang, "r", encoding="utf-8") as f:
-        yaml_load.update(yaml.safe_load(f.read()))
+    yaml_load.update(load_locale(lang))
 
 
 def in_py(key):

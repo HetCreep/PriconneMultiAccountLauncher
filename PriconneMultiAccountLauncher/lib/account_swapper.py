@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from lib.game_paths import get_registry_subkey, verify_game_data_present
+from lib.safe_names import check_name
 from lib.single_instance import registry_swap_lock
 from static.config import DataPathConfig
 
@@ -31,6 +32,38 @@ _ALWAYS_EXTRACT = "always_extract_from_dmm"
 # machine to that state (per user's design: B/C are temporary slots layered over
 # the persistent A baseline).
 BASELINE_NAME = "_baseline_"
+
+
+def _backup_dir(account_name: str) -> Path:
+    """The backup slot for an account, guaranteed to be a direct child of BACKUP_BASE_DIR.
+
+    `account_name` can originate in a shortcut file, and shortcuts can arrive through an
+    imported backup, so it is untrusted: a value such as "..\\shortcut" used to select a
+    directory outside account_backups and read or overwrite a registry.json there.
+    Raises ValueError. Dots inside a name stay allowed (existing accounts may have them).
+    """
+    check_name(account_name, strict=False)
+    path = BACKUP_BASE_DIR.joinpath(account_name)
+    if path.resolve().parent != BACKUP_BASE_DIR.resolve():
+        raise ValueError(f"backup slot escapes {BACKUP_BASE_DIR}: {account_name!r}")
+    return path
+
+
+def _validate_tree(tree: object, depth: int = 0) -> None:
+    """Reject a snapshot whose shape _import_subtree cannot consume, BEFORE the live
+    binding is deleted. A malformed file used to raise mid-import, past the rollback."""
+    if depth > 32:
+        raise ValueError("registry snapshot nested too deeply")
+    if not isinstance(tree, dict):
+        raise ValueError("registry snapshot node is not an object")
+    values, subkeys = tree.get("values", {}), tree.get("subkeys", {})
+    if not isinstance(values, dict) or not isinstance(subkeys, dict):
+        raise ValueError("registry snapshot node has malformed values/subkeys")
+    for entry in values.values():
+        if not isinstance(entry, dict) or not isinstance(entry.get("type"), str) or "data" not in entry:
+            raise ValueError("registry snapshot value entry is malformed")
+    for sub in subkeys.values():
+        _validate_tree(sub, depth + 1)
 
 
 class AccountSwapAborted(Exception):
@@ -226,9 +259,12 @@ def backup_account(account_name: str) -> bool:
 
     registry_subkey = get_registry_subkey()
     logger.info("Backing up session data (registry) for account: %s", account_name)
-    backup_dir = BACKUP_BASE_DIR.joinpath(account_name)
     try:
+        backup_dir = _backup_dir(account_name)
         backup_dir.mkdir(parents=True, exist_ok=True)
+    except ValueError as exc:
+        logger.error("Refusing to back up unsafe account name: %s", exc)
+        return False
     except OSError as exc:
         logger.error("Cannot create backup dir %s: %s", backup_dir, exc)
         return False
@@ -308,7 +344,11 @@ def restore_account(account_name: str) -> bool:
     registry_subkey = get_registry_subkey()
 
     logger.info("Restoring session data (registry) for account: %s", account_name)
-    backup_dir = BACKUP_BASE_DIR.joinpath(account_name)
+    try:
+        backup_dir = _backup_dir(account_name)
+    except ValueError as exc:
+        logger.error("Refusing to restore unsafe account name: %s", exc)
+        return False
     backup_reg = backup_dir.joinpath("registry.json")
     if not backup_reg.exists():
         # New account that has never been launched through the swap path:
@@ -332,6 +372,12 @@ def restore_account(account_name: str) -> bool:
         logger.error("Failed to read registry backup: %s", exc)
         return False
 
+    try:
+        _validate_tree(snapshot)
+    except ValueError as exc:
+        logger.error("Registry backup for %s is malformed, not applying it: %s", account_name, exc)
+        return False
+
     # Transactional restore. This is delete-then-import over the LIVE subtree, so a
     # failure part-way used to leave NEITHER account's binding present — the machine
     # ends up bound to nothing and the user's previous account has to re-login.
@@ -348,7 +394,7 @@ def restore_account(account_name: str) -> bool:
         _import_subtree(winreg.HKEY_CURRENT_USER, registry_subkey, snapshot)
         logger.info("Restored registry for %s", account_name)
         return True
-    except (OSError, KeyError, TypeError, ValueError) as exc:
+    except Exception as exc:  # deliberately broad: ANY failure after the delete must reach the rollback
         logger.error("Failed to import registry for %s: %s", account_name, exc)
         if pre_image is None:
             logger.error("No pre-image to roll back to; live binding left cleared.")
@@ -357,7 +403,7 @@ def restore_account(account_name: str) -> bool:
             _delete_subtree(winreg.HKEY_CURRENT_USER, registry_subkey)
             _import_subtree(winreg.HKEY_CURRENT_USER, registry_subkey, pre_image)
             logger.warning("Rolled the live registry back to its pre-swap state.")
-        except (OSError, KeyError, TypeError, ValueError):
+        except Exception:
             logger.exception("ROLLBACK FAILED — the live Cygames binding may be inconsistent.")
         return False
 
@@ -539,6 +585,17 @@ def swap_account_data(new_account_name: str) -> None:
     # Everything below mutates the single shared Cygames subtree. Two shortcut
     # launches for different accounts previously ran this concurrently and could
     # interleave, writing one account's binding into another's slot.
+    # The slot name comes from a shortcut file (untrusted if it arrived via an import).
+    # Refuse before taking the lock or touching any state. The baseline slot is internal:
+    # a shortcut that names it would restore, then delete or overwrite, the one snapshot
+    # of the user's pre-launcher account.
+    try:
+        check_name(new_account_name, strict=False)
+    except ValueError as exc:
+        raise AccountSwapAborted(f"Unsafe account name in shortcut: {exc}") from exc
+    if new_account_name.casefold() == BASELINE_NAME:
+        raise AccountSwapAborted("That account name is reserved by the launcher. Nothing was changed.")
+
     with registry_swap_lock():
         _swap_account_data_locked(new_account_name)
 

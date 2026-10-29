@@ -44,6 +44,7 @@ from pathlib import Path
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Protocol.KDF import PBKDF2
+from lib.safe_names import BASELINE_NAME, check_json_shape, check_name, is_reserved_account_name
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,8 @@ def _save_json_atomic(path: Path, data) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        # Compact: indentation multiplies the size of deeply nested data on disk.
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
         f.flush()
         os.fsync(f.fileno())
     os.replace(tmp, path)
@@ -178,29 +180,43 @@ def export_backup(passphrase: str, output_path: Path) -> dict:
     return summary
 
 
-def _safe_name(name: object) -> str:
-    """Validate a bundle entry name before it is joined onto a data directory.
+# An imported entry is a small config object. These bounds are far above anything the app writes
+# and keep a hostile bundle from expanding into a huge file on disk.
+_MAX_ENTRY_DEPTH = 8
+_MAX_ENTRY_NODES = 5_000
+_MAX_ENTRY_BYTES = 256 * 1024
 
-    A .pmal file is untrusted input (someone else can send one); the passphrase only
-    proves integrity, not safety. A name is rejected if it could leave its directory:
-    path separators, a drive colon, dot segments, control characters, or an absolute
-    path (joinpath would discard the base for those). Non-ASCII names are legitimate
-    account names and stay allowed.
+
+def _checked_path(base: Path, name: str, suffix: str, *, account: bool = False) -> Path:
+    """Validate an entry name from an UNTRUSTED bundle and return its path under `base`.
+
+    The passphrase only proves the bundle is intact, not that it is safe: someone else can
+    send you a .pmal. See lib/safe_names.check_name for what is rejected and why.
     """
-    if not isinstance(name, str) or not name.strip():
-        raise ValueError("Backup contains an empty or non-text entry name")
-    if name in (".", "..") or name.startswith(".") or name != name.strip():
-        raise ValueError(f"Backup contains an unsafe entry name: {name!r}")
-    if any(ch in name for ch in ("/", chr(92), ":", "*", "?", '"', "<", ">", "|")) or any(ord(ch) < 32 for ch in name):
-        raise ValueError(f"Backup contains an unsafe entry name: {name!r}")
-    return name
-
-
-def _checked_path(base: Path, name: str, suffix: str) -> Path:
-    path = base.joinpath(_safe_name(name) + suffix)
+    check_name(name, strict=True)
+    if account and is_reserved_account_name(name):
+        # "_baseline_" is the launcher's own snapshot slot of your pre-launcher account;
+        # an imported account of that name could later delete or move it.
+        raise ValueError(f"Backup uses a name reserved by the launcher: {name!r}")
+    path = base.joinpath(name + suffix)
     if path.resolve().parent != base.resolve():
         raise ValueError(f"Backup entry escapes its directory: {name!r}")
     return path
+
+
+def _checked_entry(section: str, name: str, data: object) -> dict:
+    if not isinstance(data, dict):
+        raise ValueError(f"Backup entry {section}/{name!r} is not an object")
+    check_json_shape(data, max_depth=_MAX_ENTRY_DEPTH, max_nodes=_MAX_ENTRY_NODES)
+    if len(json.dumps(data, separators=(",", ":"))) > _MAX_ENTRY_BYTES:
+        raise ValueError(f"Backup entry {section}/{name!r} is too large")
+    account = data.get("account_path")
+    if section in ("shortcuts", "account_shortcuts") and isinstance(account, str) and account:
+        # Contents, not just the file name: this later selects a registry backup directory.
+        check_name(account, strict=False)
+        if account.casefold() == BASELINE_NAME:
+            raise ValueError(f"Backup shortcut {name!r} points at a launcher-internal slot")
+    return data
 
 
 def import_backup(passphrase: str, input_path: Path) -> dict:
@@ -250,9 +266,15 @@ def import_backup(passphrase: str, input_path: Path) -> dict:
         "account_shortcuts": (DataPathConfig.ACCOUNT_SHORTCUT, ".json"),
         "browser_config": (DataPathConfig.BROWSER_CONFIG, ".json"),
     }
+    if not isinstance(bundle, dict):
+        raise ValueError("Backup content is not an object")
     for section, (base, suffix) in targets.items():
-        for name in bundle.get(section, {}):
-            _checked_path(base, name, suffix)
+        entries = bundle.get(section, {})
+        if not isinstance(entries, dict):
+            raise ValueError(f"Backup section {section!r} is not an object")
+        for name, data in entries.items():
+            _checked_path(base, name, suffix, account=(section == "accounts"))
+            _checked_entry(section, name, data)
 
     DataPathConfig.ACCOUNT.mkdir(parents=True, exist_ok=True)
     DataPathConfig.SHORTCUT.mkdir(parents=True, exist_ok=True)
@@ -267,7 +289,7 @@ def import_backup(passphrase: str, input_path: Path) -> dict:
         if device_params:
             session.device_params = device_params
         session.actauth = data
-        path = _checked_path(DataPathConfig.ACCOUNT, name, ".bytes")
+        path = _checked_path(DataPathConfig.ACCOUNT, name, ".bytes", account=True)
         session.write_bytes(str(path))  # re-encrypts under THIS machine's DPAPI
         summary["accounts"] += 1
 

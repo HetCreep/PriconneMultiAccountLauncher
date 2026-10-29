@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import psutil
+from lib.safe_names import ps_quote
 from static.config import AssetsPathConfig
 from static.env import Env
 
@@ -113,11 +114,16 @@ class Shortcut:
             else:
                 target = Path(sys.argv[0])
 
-        template = template.replace(r"{{SOURCE}}", str(source.absolute()))
-        template = template.replace(r"{{TARGET}}", str(target))
-        template = template.replace(r"{{WORKING_DIRECTORY}}", os.getcwd())
-        template = template.replace(r"{{ICON_LOCATION}}", str(icon.absolute()))
-        template = template.replace(r"{{ARGUMENTS}}", " ".join(f"{x}" for x in args))
+        # The template wraps every placeholder in SINGLE quotes, so nothing substituted here
+        # is ever expanded (`$(...)`, `$var`, backtick). Previously these sat inside
+        # double-quoted PowerShell strings, so a shortcut name containing a subexpression ran
+        # as code when the shortcut was created. ps_quote doubles the quote characters that
+        # could end the literal, including the typographic ones PowerShell also accepts.
+        template = template.replace(r"{{SOURCE}}", ps_quote(str(source.absolute())))
+        template = template.replace(r"{{TARGET}}", ps_quote(str(target)))
+        template = template.replace(r"{{WORKING_DIRECTORY}}", ps_quote(os.getcwd()))
+        template = template.replace(r"{{ICON_LOCATION}}", ps_quote(str(icon.absolute())))
+        template = template.replace(r"{{ARGUMENTS}}", ps_quote(" ".join(f"{x}" for x in args)))
 
         # Write the substituted script to a temp .ps1 and run with -File (no -Command interpolation).
         with tempfile.NamedTemporaryFile(mode="w", suffix=".ps1", encoding="utf-8", delete=False) as tf:

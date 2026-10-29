@@ -60,4 +60,7 @@ jobs:
         # No dependency install: this test imports only lib/log_sanitizer, which is
         # stdlib-only, and runs without pytest by design. It guards the invariant that
         # credentials never reach a log.
-        run: python test/property/test_log_sanitizer.py
+        run: |
+          python test/property/test_log_sanitizer.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python test/property/test_safe_names.py

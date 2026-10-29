@@ -14,6 +14,7 @@ from customtkinter import CTkBaseClass, CTkButton, CTkFrame, CTkLabel
 from component.auto_scroll_frame import CTkAutoScrollFrame
 from lib.DGPSessionV2 import DgpSessionV2
 from lib.account_swapper import BACKUP_BASE_DIR, get_last_active_account
+from lib.safe_names import is_reserved_account_name
 from lib.toast import ToastController, error_toast
 from models.shortcut_data import BrowserConfigData
 from static.config import DataPathConfig
@@ -94,7 +95,7 @@ class AccountImport(CTkAutoScrollFrame):
             raise Exception(i18n.t("app.account.filename_not_entered"))
         if path.exists():
             raise Exception(i18n.t("app.account.filename_already_exists"))
-        if self.name.get() == Constant.ALWAYS_EXTRACT_FROM_DMM:
+        if is_reserved_account_name(self.name.get()):
             raise Exception(i18n.t("app.account.filename_reserved"))
 
         session = DgpSessionV2.read_dgp()
@@ -146,7 +147,7 @@ class AccountBrowserImport(CTkAutoScrollFrame):
             raise Exception(i18n.t("app.account.filename_not_entered"))
         if path.exists():
             raise Exception(i18n.t("app.account.filename_already_exists"))
-        if self.name.get() == Constant.ALWAYS_EXTRACT_FROM_DMM:
+        if is_reserved_account_name(self.name.get()):
             raise Exception(i18n.t("app.account.filename_reserved"))
 
         session = DgpSessionV2()
@@ -237,7 +238,10 @@ class AccountEdit(CTkAutoScrollFrame):
     def save_callback(self):
         if self.body_filename.get() == "":
             raise Exception(i18n.t("app.account.filename_not_entered"))
-        if self.body_filename.get() == Constant.ALWAYS_EXTRACT_FROM_DMM:
+        if is_reserved_account_name(self.body_filename.get()):
+            raise Exception(i18n.t("app.account.filename_reserved"))
+        if self.body_filename.get() != self.filename.get() and is_reserved_account_name(self.filename.get()):
+            # Renaming would move the launcher's own snapshot slot along with it.
             raise Exception(i18n.t("app.account.filename_reserved"))
 
         path = DataPathConfig.ACCOUNT.joinpath(self.filename.get()).with_suffix(".bytes")
@@ -302,7 +306,11 @@ class AccountEdit(CTkAutoScrollFrame):
         path.unlink()
         # Remove the registry snapshot too, or a later account created with the same name
         # silently inherits this one's game binding.
-        shutil.rmtree(BACKUP_BASE_DIR.joinpath(self.filename.get()), ignore_errors=True)
+        # Never the launcher's own slots: a leftover account file named "_baseline_" (from an
+        # import made before that name was refused) can be deleted, but the snapshot beside
+        # it is the only copy of the user's pre-launcher account.
+        if not is_reserved_account_name(self.filename.get()):
+            shutil.rmtree(BACKUP_BASE_DIR.joinpath(self.filename.get()), ignore_errors=True)
         self.values.remove(self.filename.get())
         self.filename.set("")
         children_destroy(self)
