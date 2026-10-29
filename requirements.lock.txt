@@ -13,7 +13,7 @@ idna==3.20
 outcome==1.3.0.post0
 packaging==26.3
 pefile==2024.8.26
-pillow==12.3.0
+pillow==13.0.0
 psutil==7.2.2
 pycparser==3.11
 pycryptodome==3.24.1
