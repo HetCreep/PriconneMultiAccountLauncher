@@ -16,7 +16,7 @@ pefile==2024.8.26
 pillow==13.0.0
 psutil==7.2.2
 pycparser==3.12
-pycryptodome==4.2.0
+pycryptodome==4.4.0
 pyinstaller-hooks-contrib==2026.9
 pyinstaller==6.22.3
 pyreadline3==3.5.6
